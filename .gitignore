@@ -1,0 +1,28 @@
+# Copie locale de lecture du cahier des charges (source de vérité = projet claude.ai)
+docs/cahier-des-charges/
+
+# Dépendances / build (Next.js)
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Déploiement
+.vercel
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environnement
+.env
+.env.local
+.env*.local
+
+# Éditeurs / OS
+.vscode/
+.DS_Store
+Thumbs.db
