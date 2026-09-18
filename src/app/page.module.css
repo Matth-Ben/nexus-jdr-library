@@ -64,9 +64,10 @@
 .ctas {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   width: 100%;
   max-width: 440px;
-  gap: 16px;
+  gap: 12px;
   font-size: 14px;
 }
 

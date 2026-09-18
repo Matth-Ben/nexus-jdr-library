@@ -14,7 +14,19 @@ export default function Home() {
         </div>
         <div className={styles.ctas}>
           <Link className={styles.primary} href="/sorts">
-            Parcourir les sorts
+            Sorts
+          </Link>
+          <Link className={styles.secondary} href="/classes">
+            Classes
+          </Link>
+          <Link className={styles.secondary} href="/races">
+            Races
+          </Link>
+          <Link className={styles.secondary} href="/dons">
+            Dons
+          </Link>
+          <Link className={styles.secondary} href="/objets">
+            Objets
           </Link>
         </div>
       </main>
