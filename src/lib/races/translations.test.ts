@@ -29,7 +29,16 @@ describe("formatAbilityBonuses", () => {
     expect(formatAbilityBonuses({ cha: 1, str: 2 })).toBe("FOR +2, CHA +1");
   });
 
-  it("gère la clé spéciale choice_others (bonus au choix)", () => {
+  it("gère choice_others sous sa forme réelle {count, amount} (demi-elfe)", () => {
+    expect(formatAbilityBonuses({ cha: 2, choice_others: { count: 2, amount: 1 } })).toBe(
+      "CHA +2, +1 à 2 caractéristiques au choix",
+    );
+    expect(formatAbilityBonuses({ choice_others: { count: 1, amount: 1 } })).toBe(
+      "+1 à 1 caractéristique au choix",
+    );
+  });
+
+  it("gère choice_others sous forme numérique (repli défensif)", () => {
     expect(formatAbilityBonuses({ str: 2, choice_others: 1 })).toBe("FOR +2, +1 au choix");
   });
 

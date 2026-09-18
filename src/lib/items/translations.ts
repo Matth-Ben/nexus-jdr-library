@@ -51,11 +51,40 @@ export function formatAcDexBonus(acDexBonus: string): string {
  * lisible ("50 po"). `amount`/`currency` peuvent être absents même quand
  * `cost` n'est pas `null` — traité comme non renseigné dans ce cas aussi.
  */
+/**
+ * Valeur en pièces de cuivre et libellé français de chaque code de devise.
+ * La base stocke des codes anglais (`gp`, vérifié le 2026-09-18 : les 86
+ * objets sont en `gp`, avec des montants fractionnaires comme 0.1 ou 0.5),
+ * l'app mobile et les règles françaises parlent en po/pa/pc.
+ */
+const CURRENCIES: Record<string, { label: string; copper: number }> = {
+  gp: { label: "po", copper: 100 },
+  po: { label: "po", copper: 100 },
+  sp: { label: "pa", copper: 10 },
+  pa: { label: "pa", copper: 10 },
+  cp: { label: "pc", copper: 1 },
+  pc: { label: "pc", copper: 1 },
+};
+
+/**
+ * Formate `items.cost` (jsonb `{amount, currency}`, nullable) en pièces
+ * françaises, en choisissant la plus grande unité qui donne un entier :
+ * `0.1 gp` → "1 pa", `0.5 gp` → "5 pa", `0.01 gp` → "1 pc", `50 gp` → "50 po".
+ * Devise inconnue : montant et code affichés tels quels.
+ */
 export function formatCost(cost: ItemCost | null | undefined): string {
   if (!cost || cost.amount === undefined || cost.amount === null || !cost.currency) {
     return MISSING_TEXT;
   }
-  return `${cost.amount} ${cost.currency}`;
+  const currency = CURRENCIES[cost.currency];
+  if (!currency) {
+    return `${cost.amount} ${cost.currency}`;
+  }
+  const copper = Math.round(cost.amount * currency.copper);
+  if (copper > 0 && copper % 100 === 0) return `${copper / 100} po`;
+  if (copper > 0 && copper % 10 === 0) return `${copper / 10} pa`;
+  if (copper === 0) return `0 ${currency.label}`;
+  return `${copper} pc`;
 }
 
 /**

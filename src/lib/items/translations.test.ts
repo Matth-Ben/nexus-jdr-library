@@ -57,6 +57,20 @@ describe("formatCost", () => {
     expect(formatCost({ amount: 2, currency: "pc" })).toBe("2 pc");
   });
 
+  it("convertit les codes anglais réels de la base (gp) en pièces françaises", () => {
+    expect(formatCost({ amount: 50, currency: "gp" })).toBe("50 po");
+    expect(formatCost({ amount: 0.1, currency: "gp" })).toBe("1 pa");
+    expect(formatCost({ amount: 0.5, currency: "gp" })).toBe("5 pa");
+    expect(formatCost({ amount: 0.2, currency: "gp" })).toBe("2 pa");
+    expect(formatCost({ amount: 0.01, currency: "gp" })).toBe("1 pc");
+    expect(formatCost({ amount: 5, currency: "sp" })).toBe("5 pa");
+    expect(formatCost({ amount: 15, currency: "sp" })).toBe("15 pa");
+  });
+
+  it("garde une devise inconnue telle quelle", () => {
+    expect(formatCost({ amount: 3, currency: "xx" })).toBe("3 xx");
+  });
+
   it("retombe sur une valeur lisible quand cost est null ou absent", () => {
     expect(formatCost(null)).toBe("(non renseigné)");
     expect(formatCost(undefined)).toBe("(non renseigné)");

@@ -8,15 +8,24 @@
  */
 
 /**
- * Forme (supposée) de `classes.skill_choices` (jsonb, défaut `{}`) — non
- * vérifiée en base tant que la migration RLS de `classes` n'est pas
- * appliquée (voir le blocage RLS signalé au chef de projet). `count` et
- * `options` sont donc traités comme potentiellement absents plutôt que
- * garantis, même si le défaut `{}` ne devrait jamais être `null` lui-même.
+ * Forme réelle de `classes.skill_choices` (jsonb), vérifiée en base le
+ * 2026-09-18 : `choices` est soit une liste de noms de compétences (déjà en
+ * français), soit la chaîne `"toutes"` (barde). `count` et `choices` restent
+ * traités comme potentiellement absents (défaut de colonne `{}`).
  */
 export interface ClassSkillChoices {
   count?: number;
-  options?: string[];
+  choices?: string[] | "toutes";
+}
+
+/**
+ * `classes.tool_proficiencies` n'est pas toujours une liste : barde et moine
+ * ont un choix `{type, count}` (ex. `{type: "instrument", count: 3}`),
+ * vérifié en base le 2026-09-18.
+ */
+export interface ToolProficiencyChoice {
+  type?: string;
+  count?: number;
 }
 
 export interface ClassRow {
@@ -28,7 +37,7 @@ export interface ClassRow {
   saving_throw_proficiencies: string[];
   armor_proficiencies: string[];
   weapon_proficiencies: string[];
-  tool_proficiencies: string[];
+  tool_proficiencies: string[] | ToolProficiencyChoice;
   skill_choices: ClassSkillChoices;
 }
 

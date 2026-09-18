@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildTranslationMap,
+  formatAbilityList,
+  formatChoiceType,
   formatSkillChoices,
   formatStringList,
   formatUsesPerRest,
+  normalizeToolProficiencies,
   mergeClassDetail,
   mergeClassFeatures,
   mergeClassListItems,
@@ -38,13 +41,13 @@ describe("formatStringList", () => {
 
 describe("formatSkillChoices", () => {
   it("formate un choix complet (count + options)", () => {
-    expect(formatSkillChoices({ count: 2, options: ["Arcane", "Histoire", "Perception"] })).toBe(
+    expect(formatSkillChoices({ count: 2, choices: ["Arcane", "Histoire", "Perception"] })).toBe(
       "Choisissez 2 compétences parmi : Arcane, Histoire, Perception",
     );
   });
 
   it("accorde correctement le singulier pour count=1", () => {
-    expect(formatSkillChoices({ count: 1, options: ["Discrétion"] })).toBe(
+    expect(formatSkillChoices({ count: 1, choices: ["Discrétion"] })).toBe(
       "Choisissez 1 compétence parmi : Discrétion",
     );
   });
@@ -54,7 +57,7 @@ describe("formatSkillChoices", () => {
   });
 
   it("reste défensif quand 'count' est absent", () => {
-    expect(formatSkillChoices({ options: ["Arcane", "Histoire"] })).toBe(
+    expect(formatSkillChoices({ choices: ["Arcane", "Histoire"] })).toBe(
       "Choisissez des compétences parmi : Arcane, Histoire",
     );
   });
@@ -66,26 +69,74 @@ describe("formatSkillChoices", () => {
   });
 });
 
-describe("formatUsesPerRest", () => {
-  it("formate un nombre brut", () => {
-    expect(formatUsesPerRest(3)).toBe("Utilisable 3 fois par repos");
+describe("formatSkillChoices (formes réelles)", () => {
+  it("gère choices: \"toutes\" (barde)", () => {
+    expect(formatSkillChoices({ count: 3, choices: "toutes" })).toBe(
+      "Choisissez 3 compétences parmi toutes les compétences",
+    );
   });
+});
 
-  it("formate un objet {count, per}", () => {
-    expect(formatUsesPerRest({ count: 2, per: "repos long" })).toBe(
-      "Utilisable 2 fois par repos long",
+describe("formatUsesPerRest", () => {
+  it("formate {amount, rest_type} (forme réelle en base)", () => {
+    expect(formatUsesPerRest({ amount: 2, rest_type: "repos_long" })).toBe(
+      "2 utilisations par repos long",
+    );
+    expect(formatUsesPerRest({ amount: 1, rest_type: "repos_court" })).toBe(
+      "1 utilisation par repos court",
     );
   });
 
-  it("formate un objet {count} sans 'per'", () => {
-    expect(formatUsesPerRest({ count: 4 })).toBe("Utilisable 4 fois par repos");
+  it("gère amount: null (nombre d'utilisations non fixe)", () => {
+    expect(formatUsesPerRest({ amount: null, rest_type: "repos_court" })).toBe(
+      "Récupéré après un repos court",
+    );
   });
 
   it("renvoie null pour une valeur absente ou de forme inconnue", () => {
     expect(formatUsesPerRest(null)).toBeNull();
     expect(formatUsesPerRest(undefined)).toBeNull();
+    expect(formatUsesPerRest(3)).toBeNull();
     expect(formatUsesPerRest("illimité")).toBeNull();
-    expect(formatUsesPerRest({ per: "repos long" })).toBeNull();
+    expect(formatUsesPerRest({ amount: 2 })).toBeNull();
+  });
+});
+
+describe("normalizeToolProficiencies", () => {
+  it("garde une liste de noms telle quelle", () => {
+    expect(normalizeToolProficiencies(["outils de voleur"])).toEqual(["outils de voleur"]);
+    expect(normalizeToolProficiencies([])).toEqual([]);
+  });
+
+  it("transforme le choix {type, count} du barde et du moine (objet, pas liste)", () => {
+    expect(normalizeToolProficiencies({ type: "instrument", count: 3 })).toEqual([
+      "3 instruments de musique au choix",
+    ]);
+    expect(normalizeToolProficiencies({ type: "outils_artisan_ou_instrument", count: 1 })).toEqual([
+      "1 outil d'artisan ou instrument de musique au choix",
+    ]);
+  });
+
+  it("reste défensif sur un type inconnu ou une valeur vide", () => {
+    expect(normalizeToolProficiencies({ type: "jeux_divers", count: 2 })).toEqual([
+      "2 jeux divers au choix",
+    ]);
+    expect(normalizeToolProficiencies(null)).toEqual([]);
+    expect(normalizeToolProficiencies({})).toEqual([]);
+  });
+});
+
+describe("formatAbilityList / formatChoiceType", () => {
+  it("traduit les codes de caractéristique et garde les inconnus", () => {
+    expect(formatAbilityList(["str", "cha"])).toEqual(["Force", "Charisme"]);
+    expect(formatAbilityList(["xyz"])).toEqual(["xyz"]);
+    expect(formatAbilityList(null)).toEqual([]);
+  });
+
+  it("libelle les types de choix connus et humanise les autres", () => {
+    expect(formatChoiceType("sort_domaine")).toBe("Sort de domaine");
+    expect(formatChoiceType("style_combat")).toBe("Style de combat");
+    expect(formatChoiceType("nouveau_choix")).toBe("nouveau choix");
   });
 });
 
@@ -100,7 +151,7 @@ describe("mergeClassListItems", () => {
       armor_proficiencies: ["légère", "intermédiaire", "lourde"],
       weapon_proficiencies: ["armes courantes"],
       tool_proficiencies: [],
-      skill_choices: { count: 2, options: ["Athlétisme"] },
+      skill_choices: { count: 2, choices: ["Athlétisme"] },
     },
     {
       id: 2,
@@ -162,8 +213,8 @@ describe("mergeClassFeatures", () => {
       class_id: 1,
       subclass_id: null,
       level: 1,
-      choice_type: "sous-classe",
-      uses_per_rest: { count: 1, per: "repos long" },
+      choice_type: "sous_classe",
+      uses_per_rest: { amount: 1, rest_type: "repos_long" },
     },
   ];
   const nameRows: TranslationRow[] = [
@@ -193,8 +244,8 @@ describe("mergeClassFeatures", () => {
     expect(style).toMatchObject({
       name: "Style de combat",
       description: "(non renseigné)",
-      choiceType: "sous-classe",
-      usesPerRestLabel: "Utilisable 1 fois par repos long",
+      choiceType: "Sous-classe",
+      usesPerRestLabel: "1 utilisation par repos long",
     });
   });
 });
@@ -209,7 +260,7 @@ describe("mergeClassDetail", () => {
     armor_proficiencies: ["légère"],
     weapon_proficiencies: ["armes courantes"],
     tool_proficiencies: [],
-    skill_choices: { count: 2, options: ["Athlétisme", "Perception"] },
+    skill_choices: { count: 2, choices: ["Athlétisme", "Perception"] },
   };
 
   it("assemble une fiche complète à partir des différentes sources", () => {

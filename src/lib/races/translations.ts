@@ -1,5 +1,6 @@
 import type {
   AbilityBonuses,
+  ChoiceOthers,
   RaceDetail,
   RaceListItem,
   RaceRow,
@@ -27,13 +28,21 @@ const ABILITY_LABELS: Record<string, string> = {
   cha: "CHA",
 };
 
-function formatAbilityEntry(key: string, value: number): string {
-  const sign = value >= 0 ? "+" : "";
+function signed(value: number): string {
+  return `${value >= 0 ? "+" : ""}${value}`;
+}
+
+function formatAbilityEntry(key: string, value: number | ChoiceOthers): string {
   if (key === "choice_others") {
-    return `${sign}${value} au choix`;
+    if (typeof value === "number") {
+      return `${signed(value)} au choix`;
+    }
+    const amount = typeof value?.amount === "number" ? value.amount : 1;
+    const count = typeof value?.count === "number" ? value.count : 1;
+    return `${signed(amount)} à ${count} caractéristique${count > 1 ? "s" : ""} au choix`;
   }
   const label = ABILITY_LABELS[key] ?? key.toUpperCase();
-  return `${label} ${sign}${value}`;
+  return typeof value === "number" ? `${label} ${signed(value)}` : `${label} ?`;
 }
 
 /**

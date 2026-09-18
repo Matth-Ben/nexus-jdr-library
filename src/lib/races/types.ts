@@ -16,7 +16,18 @@
  * ex. `{"dex": 2}`). Une race peut porter une clé spéciale `choice_others`
  * pour un bonus au choix du joueur plutôt qu'une caractéristique fixe.
  */
-export type AbilityBonuses = Record<string, number>;
+export interface ChoiceOthers {
+  count?: number;
+  amount?: number;
+}
+
+/**
+ * Bonus fixes par caractéristique (`{"dex": 2}`, codes anglais str/dex/con/
+ * int/wis/cha). `choice_others` est un objet `{count, amount}` — ex. demi-elfe
+ * `{count: 2, amount: 1}` = +1 à deux autres caractéristiques au choix
+ * (forme réelle vérifiée en base le 2026-09-18).
+ */
+export type AbilityBonuses = Record<string, number | ChoiceOthers>;
 
 /** Élément de `races.traits`/`subraces.traits` (jsonb, liste d'objets). */
 export interface Trait {

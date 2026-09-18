@@ -7,6 +7,7 @@ import type {
   ClassSkillChoices,
   SubclassRow,
   SubclassSummary,
+  ToolProficiencyChoice,
   TranslationRow,
 } from "./types";
 
@@ -39,20 +40,76 @@ export function formatStringList(values: readonly string[] | null | undefined): 
   return values.join(", ");
 }
 
+const ABILITY_LABELS: Record<string, string> = {
+  str: "Force",
+  dex: "Dextérité",
+  con: "Constitution",
+  int: "Intelligence",
+  wis: "Sagesse",
+  cha: "Charisme",
+};
+
+/** "Force", "Dextérité"... à partir du code stocké en base (`str`, `dex`...). */
+export function formatAbilityList(codes: readonly string[] | null | undefined): string[] {
+  return (codes ?? []).map((code) => ABILITY_LABELS[code] ?? code);
+}
+
+const TOOL_CHOICE_LABELS: Record<string, { one: string; many: string }> = {
+  instrument: { one: "instrument de musique", many: "instruments de musique" },
+  outils_artisan_ou_instrument: {
+    one: "outil d'artisan ou instrument de musique",
+    many: "outils d'artisan ou instruments de musique",
+  },
+};
+
+function humanize(code: string): string {
+  return code.replace(/_/g, " ");
+}
+
 /**
- * Formate `classes.skill_choices` (jsonb `{count?, options?}`) en une
- * consigne lisible ("Choisissez 2 parmi : Arcane, Histoire...") — défensif
- * si `count` et/ou `options` sont absents, forme non garantie en base.
+ * Normalise `classes.tool_proficiencies` (liste de noms, ou choix
+ * `{type, count}` pour barde/moine) en liste de libellés affichables.
+ */
+export function normalizeToolProficiencies(
+  raw: readonly string[] | ToolProficiencyChoice | null | undefined,
+): string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((item): item is string => typeof item === "string");
+  }
+  if (raw && typeof raw === "object" && "count" in raw) {
+    const choice = raw as ToolProficiencyChoice;
+    const count = choice.count;
+    if (typeof count === "number" && count > 0) {
+      const labels = choice.type ? TOOL_CHOICE_LABELS[choice.type] : undefined;
+      const noun = labels
+        ? count === 1
+          ? labels.one
+          : labels.many
+        : choice.type
+          ? humanize(choice.type)
+          : "outil";
+      return [`${count} ${noun} au choix`];
+    }
+  }
+  return [];
+}
+
+/**
+ * Formate `classes.skill_choices` (jsonb `{count?, choices?}`) en une
+ * consigne lisible ("Choisissez 2 compétences parmi : Arcanes, Histoire...")
+ * — défensif si `count` et/ou `choices` sont absents ; `choices: "toutes"`
+ * (barde) donne "parmi toutes les compétences".
  */
 export function formatSkillChoices(
   skillChoices: ClassSkillChoices | null | undefined,
 ): string {
   const count = skillChoices?.count;
-  const options = skillChoices?.options;
+  const choices = skillChoices?.choices;
   const hasCount = typeof count === "number" && count > 0;
-  const hasOptions = Array.isArray(options) && options.length > 0;
+  const allSkills = choices === "toutes";
+  const hasList = Array.isArray(choices) && choices.length > 0;
 
-  if (!hasCount && !hasOptions) {
+  if (!hasCount && !allSkills && !hasList) {
     return MISSING_TEXT;
   }
 
@@ -60,34 +117,60 @@ export function formatSkillChoices(
     ? `Choisissez ${count} compétence${count === 1 ? "" : "s"}`
     : "Choisissez des compétences";
 
-  return hasOptions ? `${countLabel} parmi : ${options.join(", ")}` : countLabel;
+  if (allSkills) {
+    return `${countLabel} parmi toutes les compétences`;
+  }
+  return hasList ? `${countLabel} parmi : ${choices.join(", ")}` : countLabel;
 }
 
+const REST_LABELS: Record<string, string> = {
+  repos_court: "repos court",
+  repos_long: "repos long",
+};
+
 /**
- * Résumé défensif de `class_features.uses_per_rest` (jsonb sans forme
- * garantie, potentiellement `null`). Ne suppose rien de la structure au-delà
- * d'un nombre brut ou d'un objet `{count, per}` optionnel — toute autre
- * forme retombe sur `null` (pas d'affichage) plutôt que de planter.
+ * Résumé de `class_features.uses_per_rest` (jsonb nullable), forme réelle
+ * vérifiée en base le 2026-09-18 : `{amount: number | null, rest_type:
+ * "repos_court" | "repos_long"}`. `amount` nul = nombre d'utilisations non
+ * fixe (ex. dépend d'une caractéristique), seul le type de repos est alors
+ * affiché. Toute autre forme retombe sur `null` (pas d'affichage).
  */
 export function formatUsesPerRest(value: unknown): string | null {
-  if (value === null || value === undefined) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return `Utilisable ${value} fois par repos`;
+  const record = value as Record<string, unknown>;
+  const rest = typeof record.rest_type === "string" ? record.rest_type : null;
+  if (rest === null) {
+    return null;
   }
-  if (typeof value === "object" && !Array.isArray(value)) {
-    const record = value as Record<string, unknown>;
-    const count = record.count;
-    const per = record.per;
-    if (typeof count === "number" && typeof per === "string" && per !== "") {
-      return `Utilisable ${count} fois par ${per}`;
-    }
-    if (typeof count === "number") {
-      return `Utilisable ${count} fois par repos`;
-    }
+  const restLabel = REST_LABELS[rest] ?? humanize(rest);
+  const amount = record.amount;
+  if (typeof amount === "number" && Number.isFinite(amount)) {
+    return `${amount} utilisation${amount > 1 ? "s" : ""} par ${restLabel}`;
   }
-  return null;
+  return `Récupéré après un ${restLabel}`;
+}
+
+const CHOICE_TYPE_LABELS: Record<string, string> = {
+  amelioration_caracteristiques: "Amélioration de caractéristiques",
+  ancetre_draconique: "Ancêtre draconique",
+  discipline_elementaire: "Discipline élémentaire",
+  ennemi_jure: "Ennemi juré",
+  expertise: "Expertise",
+  invocation: "Invocation",
+  manoeuvre: "Manœuvre",
+  metamagie: "Métamagie",
+  pacte: "Pacte",
+  sort_domaine: "Sort de domaine",
+  sort_mineur_bonus: "Sort mineur bonus",
+  sous_classe: "Sous-classe",
+  style_combat: "Style de combat",
+};
+
+/** Libellé FR de `class_features.choice_type` (repli : code humanisé). */
+export function formatChoiceType(code: string): string {
+  return CHOICE_TYPE_LABELS[code] ?? humanize(code);
 }
 
 /**
@@ -127,7 +210,7 @@ export function mergeClassFeature(
     name: names.get(entityId) ?? MISSING_NAME,
     description: descriptions.get(entityId) ?? MISSING_TEXT,
     level: row.level,
-    choiceType: row.choice_type,
+    choiceType: row.choice_type ? formatChoiceType(row.choice_type) : null,
     usesPerRestLabel: formatUsesPerRest(row.uses_per_rest),
   };
 }
@@ -182,11 +265,11 @@ export function mergeClassDetail(
   return {
     ...toClassListItem(row, names),
     description: descriptions.get(String(row.id)) ?? MISSING_TEXT,
-    primaryAbilities: row.primary_abilities,
-    savingThrowProficiencies: row.saving_throw_proficiencies,
+    primaryAbilities: formatAbilityList(row.primary_abilities),
+    savingThrowProficiencies: formatAbilityList(row.saving_throw_proficiencies),
     armorProficiencies: row.armor_proficiencies,
     weaponProficiencies: row.weapon_proficiencies,
-    toolProficiencies: row.tool_proficiencies,
+    toolProficiencies: normalizeToolProficiencies(row.tool_proficiencies),
     skillChoicesLabel: formatSkillChoices(row.skill_choices),
     features: mergeClassFeatures(featureRows, featureNameRows, featureDescriptionRows),
     subclasses: mergeSubclassSummaries(subclassRows, subclassNameRows),
