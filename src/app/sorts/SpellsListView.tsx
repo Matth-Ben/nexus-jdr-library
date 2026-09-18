@@ -94,7 +94,7 @@ export function SpellsListView({
                   <span className={styles.name}>{spell.name}</span>
                   <span className={styles.meta}>
                     <span>{levelLabel(spell.level)}</span>
-                    <span>{spell.school}</span>
+                    <span>{spell.school ?? "École non précisée"}</span>
                     <span>{spell.castingTime}</span>
                     {spell.concentration ? (
                       <span className={styles.badge}>Concentration</span>

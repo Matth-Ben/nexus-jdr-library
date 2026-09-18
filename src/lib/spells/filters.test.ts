@@ -118,6 +118,21 @@ describe("listSchools", () => {
   it("renvoie une liste vide pour un jeu de sorts vide", () => {
     expect(listSchools([])).toEqual([]);
   });
+
+  it("ignore les sorts sans école renseignée (placeholders d'import) sans planter", () => {
+    const withPlaceholder: SpellListItem[] = [
+      ...SPELLS,
+      {
+        id: 478,
+        name: "Sort non catalogué",
+        level: 0,
+        school: null,
+        castingTime: "1 action",
+        concentration: false,
+      },
+    ];
+    expect(listSchools(withPlaceholder)).toEqual(["Abjuration", "Évocation"]);
+  });
 });
 
 describe("SPELL_LEVELS", () => {

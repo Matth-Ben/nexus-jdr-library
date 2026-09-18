@@ -4,13 +4,31 @@
  * pattern déjà en place côté dépôt mobile (table `spells` + table générique
  * `translations`, pas de colonne `name`/`description` directe sur `spells`).
  */
+/**
+ * Forme réelle de la colonne `spells.components` (jsonb, pas texte — voir
+ * `20260825090300_create_reference_spells_items_tables.sql` du dépôt web).
+ * Pas de champ pour le détail d'une composante matérielle spécifique (ex.
+ * "une pincée de guano de chauve-souris") : ce texte, quand il existe, fait
+ * partie de la description du sort, pas de cette colonne.
+ */
+export interface SpellComponents {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+}
+
 export interface SpellRow {
   id: number;
   level: number;
-  school: string;
+  /**
+   * Nullable en base (`school text`, pas de `not null`) — au moins 3 sorts
+   * placeholders (import XML, contenu non catalogué) l'ont réellement à
+   * `null` en production, vérifié le 2026-09-18.
+   */
+  school: string | null;
   casting_time: string;
   range?: string | null;
-  components?: string | null;
+  components?: SpellComponents | null;
   duration?: string | null;
   concentration: boolean;
 }
@@ -26,7 +44,7 @@ export interface SpellListItem {
   id: number;
   name: string;
   level: number;
-  school: string;
+  school: string | null;
   castingTime: string;
   concentration: boolean;
 }

@@ -17,7 +17,7 @@ export function SpellDetailView({ spell }: SpellDetailViewProps) {
       <h1>{spell.name}</h1>
       <p className={styles.meta}>
         <span>{levelLabel(spell.level)}</span>
-        <span>{spell.school}</span>
+        <span>{spell.school ?? "École non précisée"}</span>
         {spell.concentration ? <span className={styles.badge}>Concentration</span> : null}
       </p>
 

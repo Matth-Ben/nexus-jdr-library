@@ -53,9 +53,15 @@ export function filterSpells(
   });
 }
 
-/** Liste triée des écoles distinctes présentes dans un jeu de sorts. */
+/**
+ * Liste triée des écoles distinctes présentes dans un jeu de sorts — les
+ * sorts sans école renseignée (`school: null`, ex. placeholders d'import
+ * XML) n'apparaissent pas dans le filtre, ils restent visibles dans la
+ * liste via le fallback d'affichage.
+ */
 export function listSchools(spells: readonly SpellListItem[]): string[] {
-  return Array.from(new Set(spells.map((spell) => spell.school))).sort((a, b) =>
-    a.localeCompare(b, "fr"),
-  );
+  const schools = spells
+    .map((spell) => spell.school)
+    .filter((school): school is string => school !== null);
+  return Array.from(new Set(schools)).sort((a, b) => a.localeCompare(b, "fr"));
 }

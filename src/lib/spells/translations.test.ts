@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTranslationMap, mergeSpellDetail, mergeSpellListItems } from "./translations";
+import { buildTranslationMap, formatComponents, mergeSpellDetail, mergeSpellListItems } from "./translations";
 import type { SpellRow, TranslationRow } from "./types";
 
 describe("buildTranslationMap", () => {
@@ -12,6 +12,23 @@ describe("buildTranslationMap", () => {
     expect(map.get("1")).toBe("Projectile magique");
     expect(map.get("2")).toBe("Boule de feu");
     expect(map.size).toBe(2);
+  });
+});
+
+describe("formatComponents", () => {
+  it("liste les composantes actives dans l'ordre V, S, M", () => {
+    expect(formatComponents({ verbal: true, somatic: true, material: false })).toBe("V, S");
+    expect(formatComponents({ verbal: true, somatic: false, material: true })).toBe("V, M");
+    expect(formatComponents({ verbal: false, somatic: true, material: true })).toBe("S, M");
+  });
+
+  it("retombe sur une valeur lisible quand la colonne est absente", () => {
+    expect(formatComponents(null)).toBe("(non renseigné)");
+    expect(formatComponents(undefined)).toBe("(non renseigné)");
+  });
+
+  it("gère le cas (théorique) d'un sort sans aucune composante", () => {
+    expect(formatComponents({ verbal: false, somatic: false, material: false })).toBe("Aucune");
   });
 });
 
@@ -85,7 +102,7 @@ describe("mergeSpellDetail", () => {
     school: "Évocation",
     casting_time: "1 action",
     range: "45 mètres",
-    components: "V, S, M",
+    components: { verbal: true, somatic: true, material: true },
     duration: "Instantanée",
     concentration: false,
   };

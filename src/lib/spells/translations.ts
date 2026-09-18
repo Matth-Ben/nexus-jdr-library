@@ -1,8 +1,25 @@
-import type { SpellDetail, SpellListItem, SpellRow, TranslationRow } from "./types";
+import type { SpellComponents, SpellDetail, SpellListItem, SpellRow, TranslationRow } from "./types";
 
 /** Valeur affichée quand une traduction attendue est absente en base. */
 const MISSING_NAME = "(nom manquant)";
 const MISSING_TEXT = "(non renseigné)";
+
+/**
+ * Formate `spells.components` (jsonb `{verbal, somatic, material}`) en
+ * abréviations lisibles ("V, S, M"), dans l'ordre conventionnel des règles
+ * D&D. Le détail d'une composante matérielle spécifique, quand il existe,
+ * vit dans la description du sort — pas dans cette colonne.
+ */
+export function formatComponents(components: SpellComponents | null | undefined): string {
+  if (!components) {
+    return MISSING_TEXT;
+  }
+  const parts: string[] = [];
+  if (components.verbal) parts.push("V");
+  if (components.somatic) parts.push("S");
+  if (components.material) parts.push("M");
+  return parts.length > 0 ? parts.join(", ") : "Aucune";
+}
 
 /**
  * Indexe des lignes `translations` par `entity_id` — fonction pure, aucune
@@ -60,7 +77,7 @@ export function mergeSpellDetail(
   return {
     ...toSpellListItem(row, names),
     range: row.range ?? MISSING_TEXT,
-    components: row.components ?? MISSING_TEXT,
+    components: formatComponents(row.components),
     duration: row.duration ?? MISSING_TEXT,
     description: descriptions.get(String(row.id)) ?? MISSING_TEXT,
   };
