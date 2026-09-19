@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { safeNextPath } from "@/lib/auth/redirect";
-import { isUuid } from "@/lib/proposals/filters";
+import { allowedSchoolsFor, isUnchanged, type ExistingContent } from "@/lib/proposals/existing";
+import { fetchExisting } from "@/lib/proposals/existing-fetch";
+import { isProposalType, isUuid } from "@/lib/proposals/filters";
 import { validateComment, validateProposal, validateReason, type FieldErrors } from "@/lib/proposals/payload";
+import { parseTargetId } from "@/lib/proposals/target";
 import { nextVote } from "@/lib/proposals/voting";
 import { createSessionClient } from "@/lib/supabase/server";
 
@@ -64,7 +67,12 @@ function logFailure(action: string, error: { code?: string; message?: string }):
 
 export async function createProposal(_previous: ProposalFormState, formData: FormData): Promise<ProposalFormState> {
   const contentType = field(formData, "content_type");
-  const { supabase, user } = await requireUser(`/propositions/nouvelle?type=${encodeURIComponent(contentType)}`);
+  const rawTarget = field(formData, "target_id").trim();
+  const { supabase, user } = await requireUser(
+    `/propositions/nouvelle?type=${encodeURIComponent(contentType)}${
+      rawTarget !== "" ? `&cible=${encodeURIComponent(rawTarget)}` : ""
+    }`,
+  );
 
   const values: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
@@ -72,21 +80,58 @@ export async function createProposal(_previous: ProposalFormState, formData: For
       values[key] = value;
     }
   }
+  const failure = (errors: FieldErrors): ProposalFormState => ({ errors, values, nonce: crypto.randomUUID() });
 
-  const result = validateProposal(contentType, formData);
+  // Cible (modification) : jamais de confiance au client. L'identifiant doit être un entier > 0
+  // et l'élément doit exister ; il est relu ici, pas reçu du navigateur.
+  let targetId: number | null = null;
+  let existing: ExistingContent | null = null;
+  if (rawTarget !== "") {
+    targetId = parseTargetId(rawTarget);
+    if (targetId === null || !isProposalType(contentType)) {
+      return failure({ _form: "L'élément à modifier est invalide. Choisis-le de nouveau dans la liste." });
+    }
+    try {
+      existing = await fetchExisting(supabase, contentType, targetId);
+    } catch (error) {
+      console.error("[propositions] createProposal/cible", error);
+      return failure({ _form: "Impossible de vérifier l'élément à modifier pour le moment. Réessaie plus tard." });
+    }
+    if (!existing) {
+      return failure({ _form: "Élément introuvable : il n'existe pas ou plus dans la bibliothèque." });
+    }
+  }
+
+  const result = validateProposal(
+    contentType,
+    formData,
+    targetId !== null ? { modification: true, allowedSchools: allowedSchoolsFor(existing) } : {},
+  );
   if (!result.ok) {
-    return { errors: result.errors, values, nonce: crypto.randomUUID() };
+    return failure(result.errors);
+  }
+
+  if (existing && isUnchanged(existing, result)) {
+    return failure({
+      _form: "Aucune modification détectée : ta proposition est identique à l'élément actuel. Change au moins un champ.",
+    });
   }
 
   const { data, error } = await supabase
     .from("content_proposals")
-    .insert({ author_id: user.id, content_type: contentType, title: result.title, payload: result.payload })
+    .insert({
+      author_id: user.id,
+      content_type: contentType,
+      title: result.title,
+      payload: result.payload,
+      ...(targetId !== null ? { target_id: targetId } : {}),
+    })
     .select("id")
     .single();
 
   if (error || !data) {
     logFailure("createProposal", error ?? {});
-    return { errors: { _form: "Ta proposition n'a pas pu être enregistrée. Réessaie plus tard." }, values, nonce: crypto.randomUUID() };
+    return failure({ _form: "Ta proposition n'a pas pu être enregistrée. Réessaie plus tard." });
   }
 
   revalidatePath("/propositions");

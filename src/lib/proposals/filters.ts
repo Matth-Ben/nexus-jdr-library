@@ -1,8 +1,10 @@
 import type { RawSearchParams } from "@/lib/spells/filters";
 import {
+  PROPOSAL_ORIGINS,
   PROPOSAL_STATUSES,
   PROPOSAL_TYPES,
   type ProposalFilters,
+  type ProposalOrigin,
   type ProposalStatus,
   type ProposalType,
 } from "./types";
@@ -24,16 +26,22 @@ export function isProposalStatus(value: unknown): value is ProposalStatus {
   return typeof value === "string" && (PROPOSAL_STATUSES as readonly string[]).includes(value);
 }
 
+export function isProposalOrigin(value: unknown): value is ProposalOrigin {
+  return typeof value === "string" && (PROPOSAL_ORIGINS as readonly string[]).includes(value);
+}
+
 /**
- * Traduit `?statut=` / `?type=` en filtres sûrs : toute valeur inconnue
+ * Traduit `?statut=` / `?type=` / `?origine=` en filtres sûrs : toute valeur inconnue
  * retombe sur le défaut (`pending`, tous les types) au lieu de lever une erreur.
  */
 export function parseProposalFilters(searchParams: RawSearchParams): ProposalFilters {
   const rawStatus = firstValue(searchParams.statut)?.trim();
   const rawType = firstValue(searchParams.type)?.trim();
+  const rawOrigin = firstValue(searchParams.origine)?.trim();
   return {
     status: isProposalStatus(rawStatus) ? rawStatus : DEFAULT_STATUS,
     type: isProposalType(rawType) ? rawType : undefined,
+    origin: isProposalOrigin(rawOrigin) ? rawOrigin : undefined,
   };
 }
 
@@ -60,5 +68,6 @@ export function filterParams(filters: ProposalFilters): Record<string, string | 
   return {
     statut: filters.status === DEFAULT_STATUS ? undefined : filters.status,
     type: filters.type,
+    origine: filters.origin,
   };
 }

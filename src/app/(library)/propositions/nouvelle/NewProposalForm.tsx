@@ -24,19 +24,32 @@ import { RaceFields } from "./RaceFields";
 
 const INITIAL_STATE: ProposalFormState = {};
 
-export function NewProposalForm({ type }: { type: ProposalType }) {
+interface NewProposalFormProps {
+  type: ProposalType;
+  /** Élément existant à modifier (`target_id`) : le formulaire s'ouvre prérempli avec ses valeurs. */
+  target?: { id: number; initialValues: Record<string, string> };
+}
+
+export function NewProposalForm({ type, target }: NewProposalFormProps) {
   const [state, formAction, pending] = useActionState(createProposal, INITIAL_STATE);
   const errors = state.errors ?? {};
   const values = state.values ?? {};
-  // Les valeurs conservées ne valent que pour le type soumis.
-  const kept = values.content_type === type ? values : {};
+  const modification = target !== undefined;
+  // Les valeurs conservées ne valent que pour le type soumis ; sans soumission, celles de l'existant.
+  const kept = values.content_type === type ? values : (target?.initialValues ?? {});
   const checked = (name: string) => kept[name] !== undefined && kept[name] !== "";
   const isRaceOrClass = type === "race" || type === "class";
   const errorKeys = Object.keys(errors).filter((key) => key !== "_form");
+  const currentSchool = target?.initialValues.school ?? "";
+  const schoolOptions: string[] = [...SPELL_SCHOOLS];
+  if (modification && currentSchool !== "" && !schoolOptions.includes(currentSchool)) {
+    schoolOptions.push(currentSchool);
+  }
 
   return (
     <form action={formAction} className={styles.form} noValidate>
       <input type="hidden" name="content_type" value={type} />
+      {target ? <input type="hidden" name="target_id" value={target.id} /> : null}
 
       {errors._form ? (
         <p role="alert" className={styles.error}>
@@ -66,8 +79,12 @@ export function NewProposalForm({ type }: { type: ProposalType }) {
         )}
       </Field>
 
-      {type === "race" ? <RaceFields key={state.nonce} values={kept} errors={errors} /> : null}
-      {type === "class" ? <ClassFields key={state.nonce} values={kept} errors={errors} /> : null}
+      {type === "race" ? (
+        <RaceFields key={state.nonce} values={kept} errors={errors} modification={modification} />
+      ) : null}
+      {type === "class" ? (
+        <ClassFields key={state.nonce} values={kept} errors={errors} modification={modification} />
+      ) : null}
 
       {type === "spell" ? (
         <>
@@ -87,7 +104,9 @@ export function NewProposalForm({ type }: { type: ProposalType }) {
             <Field name="school" label="École" error={errors.school}>
               {(props) => (
                 <select {...props} name="school" defaultValue={kept.school ?? SPELL_SCHOOLS[0]}>
-                  {SPELL_SCHOOLS.map((school) => (
+                  {/* Modification : l'école peut manquer en base, ou venir d'un ancien vocabulaire (« Invocation »). */}
+                  {modification ? <option value="">Non précisée</option> : null}
+                  {schoolOptions.map((school) => (
                     <option key={school} value={school}>
                       {school}
                     </option>
@@ -244,7 +263,7 @@ export function NewProposalForm({ type }: { type: ProposalType }) {
       {!isRaceOrClass ? (
         <Field
           name="description"
-          label="Description"
+          label={modification && type === "item" ? "Description (optionnelle)" : "Description"}
           error={errors.description}
           hint={`${DESCRIPTION_MAX} caractères maximum.`}
         >

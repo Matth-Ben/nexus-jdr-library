@@ -21,6 +21,8 @@ export interface PayloadItem {
   rows?: PayloadRow[];
   /** Sous-listes (sous-race : ses traits). */
   sections?: PayloadSection[];
+  /** Modification proposée : élément ajouté ou modifié par rapport à l'existant (voir `diff.ts`). */
+  mark?: "added" | "modified";
 }
 
 export interface PayloadSection {

@@ -1,4 +1,5 @@
 import type { FeatDetail } from "@/lib/feats/types";
+import { ProposeModificationLink } from "@/components/ProposeModificationLink";
 import styles from "./dons.module.css";
 
 export interface FeatDetailViewProps {
@@ -15,6 +16,8 @@ export function FeatDetailView({ feat }: FeatDetailViewProps) {
       </p>
 
       <p className={styles.description}>{feat.description}</p>
+
+      <ProposeModificationLink type="feat" id={feat.id} />
     </div>
   );
 }

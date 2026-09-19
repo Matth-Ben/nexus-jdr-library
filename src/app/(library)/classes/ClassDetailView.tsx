@@ -1,6 +1,7 @@
 import { formatStringList } from "@/lib/classes/translations";
 import type { ClassDetail } from "@/lib/classes/types";
 import { hitDieLabel } from "./ClassesListView";
+import { ProposeModificationLink } from "@/components/ProposeModificationLink";
 import styles from "./classes.module.css";
 
 export interface ClassDetailViewProps {
@@ -84,6 +85,8 @@ export function ClassDetailView({ klass }: ClassDetailViewProps) {
           </ul>
         )}
       </section>
+
+      <ProposeModificationLink type="class" id={klass.id} />
     </div>
   );
 }

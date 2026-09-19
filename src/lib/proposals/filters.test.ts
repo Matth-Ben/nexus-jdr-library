@@ -80,3 +80,20 @@ describe("filterParams", () => {
     expect(filterParams({ status: "rejected", type: "feat" })).toEqual({ statut: "rejected", type: "feat" });
   });
 });
+
+describe("origine (?origine=)", () => {
+  it("accepte nouveau et modification, ignore le reste", () => {
+    expect(parseProposalFilters({ origine: "nouveau" }).origin).toBe("nouveau");
+    expect(parseProposalFilters({ origine: ["modification", "x"] }).origin).toBe("modification");
+    expect(parseProposalFilters({ origine: "x" }).origin).toBeUndefined();
+    expect(parseProposalFilters({}).origin).toBeUndefined();
+  });
+
+  it("est conservée dans les liens de filtres", () => {
+    expect(filterParams({ status: "pending", origin: "modification" })).toEqual({
+      statut: undefined,
+      type: undefined,
+      origine: "modification",
+    });
+  });
+});

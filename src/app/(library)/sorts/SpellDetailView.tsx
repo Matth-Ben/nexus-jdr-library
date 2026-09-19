@@ -1,5 +1,6 @@
 import type { SpellDetail } from "@/lib/spells/types";
 import { levelLabel } from "./SpellsListView";
+import { ProposeModificationLink } from "@/components/ProposeModificationLink";
 import styles from "./sorts.module.css";
 
 export interface SpellDetailViewProps {
@@ -37,6 +38,8 @@ export function SpellDetailView({ spell }: SpellDetailViewProps) {
       </dl>
 
       <p className={styles.description}>{spell.description}</p>
+
+      <ProposeModificationLink type="spell" id={spell.id} />
     </div>
   );
 }

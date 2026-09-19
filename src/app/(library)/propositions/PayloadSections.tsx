@@ -21,6 +21,9 @@ function ItemTitle({ item }: { item: PayloadItem }) {
     <>
       {item.title}
       {item.note ? <span className={styles.itemNote}> — {item.note}</span> : null}
+      {item.mark ? (
+        <span className={styles.itemMark}>{item.mark === "added" ? "ajouté" : "modifié"}</span>
+      ) : null}
     </>
   );
 }

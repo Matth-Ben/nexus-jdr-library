@@ -3,7 +3,7 @@ import { authorLabel, formatProposalDate, STATUS_LABELS, TYPE_LABELS } from "@/l
 import { filterParams, LIST_LIMIT } from "@/lib/proposals/filters";
 import { PROPOSAL_STATUSES, PROPOSAL_TYPES, type ProposalFilters, type ProposalListItem } from "@/lib/proposals/types";
 import { panelHref } from "@/lib/panel";
-import { ProposalScore, StatusBadge, TypeBadge } from "./ProposalBadges";
+import { ModificationBadge, ProposalScore, StatusBadge, TypeBadge } from "./ProposalBadges";
 import styles from "./propositions.module.css";
 
 export interface ProposalsListViewProps {
@@ -50,6 +50,14 @@ export function ProposalsListView({ proposals, filters, loadError, openId }: Pro
             ))}
           </select>
         </div>
+        <div className={styles.field}>
+          <label htmlFor="proposal-filter-origin">Origine</label>
+          <select id="proposal-filter-origin" name="origine" defaultValue={filters.origin ?? ""}>
+            <option value="">Toutes</option>
+            <option value="nouveau">Nouveau contenu</option>
+            <option value="modification">Modifications</option>
+          </select>
+        </div>
         <button type="submit">Filtrer</button>
       </form>
 
@@ -61,7 +69,9 @@ export function ProposalsListView({ proposals, filters, loadError, openId }: Pro
         <p className={styles.empty}>
           {filters.type
             ? `Aucune proposition ${statusLabel} de ce type pour le moment.`
-            : `Aucune proposition ${statusLabel} pour le moment.`}
+            : filters.origin
+              ? `Aucune proposition ${statusLabel} de cette origine pour le moment.`
+              : `Aucune proposition ${statusLabel} pour le moment.`}
         </p>
       ) : (
         <>
@@ -83,6 +93,7 @@ export function ProposalsListView({ proposals, filters, loadError, openId }: Pro
                     <span className={styles.rowTop}>
                       <span className={styles.name}>{proposal.title}</span>
                       <TypeBadge type={proposal.content_type} />
+                      {proposal.target_id !== null && proposal.target_id !== undefined ? <ModificationBadge /> : null}
                       <StatusBadge status={proposal.status} />
                     </span>
                     <span className={styles.meta}>

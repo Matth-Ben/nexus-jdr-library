@@ -15,7 +15,7 @@ import type {
  * calculée PostgREST (nom d'affichage uniquement, jamais l'e-mail).
  */
 const LIST_COLUMNS =
-  "id, author_id, content_type, title, status, votes_up, votes_down, comments_count, created_at, author_name:content_proposals_author_name";
+  "id, author_id, content_type, target_id, title, status, votes_up, votes_down, comments_count, created_at, author_name:content_proposals_author_name";
 
 const DETAIL_COLUMNS = `${LIST_COLUMNS}, payload, rejection_reason, reviewed_at`;
 
@@ -32,6 +32,11 @@ export async function listProposals(filters: ProposalFilters): Promise<ProposalL
   let query = supabase.from("content_proposals").select(LIST_COLUMNS).eq("status", filters.status);
   if (filters.type) {
     query = query.eq("content_type", filters.type);
+  }
+  if (filters.origin === "nouveau") {
+    query = query.is("target_id", null);
+  } else if (filters.origin === "modification") {
+    query = query.not("target_id", "is", null);
   }
   const { data, error } = await query.order("created_at", { ascending: false }).limit(LIST_LIMIT);
   if (error) {

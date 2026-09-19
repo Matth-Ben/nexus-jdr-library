@@ -17,9 +17,11 @@ interface RaceFieldsProps {
   /** Valeurs saisies avant la dernière erreur (vide au premier affichage). */
   values: Record<string, string>;
   errors: Record<string, string>;
+  /** Modification d'une race existante : une race sans trait est acceptée. */
+  modification?: boolean;
 }
 
-export function RaceFields({ values, errors }: RaceFieldsProps) {
+export function RaceFields({ values, errors, modification = false }: RaceFieldsProps) {
   const top = (sub: string): RowField => ({ name: sub, defaultValue: values[sub] ?? "", error: errors[sub] });
 
   return (
@@ -66,7 +68,14 @@ export function RaceFields({ values, errors }: RaceFieldsProps) {
         {(props) => <textarea {...props} name="languages" defaultValue={values.languages ?? ""} rows={3} />}
       </Field>
 
-      <TraitRows name="traits" valueName="traits" errorName="traits" values={values} errors={errors} />
+      <TraitRows
+        name="traits"
+        valueName="traits"
+        errorName="traits"
+        values={values}
+        errors={errors}
+        optional={modification}
+      />
 
       <RepeatableRows
         name="subraces"

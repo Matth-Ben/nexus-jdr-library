@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DetailPanel } from "@/components/DetailPanel";
 import { closeHref, panelHref } from "@/lib/panel";
+import { fetchExisting } from "@/lib/proposals/existing-fetch";
+import { createSessionClient } from "@/lib/supabase/server";
 import { filterParams, parseOpenUuid, parseProposalFilters } from "@/lib/proposals/filters";
 import { getCurrentUser, getProposal, getUserVote, isAdmin, listComments, listProposals } from "@/lib/proposals/queries";
 import type {
@@ -13,7 +15,7 @@ import type {
   VoteValue,
 } from "@/lib/proposals/types";
 import type { RawSearchParams } from "@/lib/spells/filters";
-import { ProposalDetailView } from "./ProposalDetailView";
+import { ProposalDetailView, type ProposalTarget } from "./ProposalDetailView";
 import { ProposalsListView } from "./ProposalsListView";
 
 export const metadata: Metadata = {
@@ -31,6 +33,19 @@ interface PanelData {
   comments: ProposalComment[];
   admin: boolean;
   userVote: VoteValue | null;
+  target: ProposalTarget | undefined;
+}
+
+/** Recharge l'élément visé par une modification (pour le diff). Jamais bloquant pour le reste du panneau. */
+async function loadTarget(proposal: ProposalDetail | null): Promise<ProposalTarget | undefined> {
+  if (!proposal || proposal.target_id === null || proposal.target_id === undefined) return undefined;
+  try {
+    const existing = await fetchExisting(await createSessionClient(), proposal.content_type, proposal.target_id);
+    return existing ? { status: "found", existing } : { status: "missing" };
+  } catch (error) {
+    console.error("[propositions] échec du chargement de l'élément visé", error);
+    return { status: "error" };
+  }
 }
 
 async function PanelContent({ id, filters }: { id: string; filters: ProposalFilters }) {
@@ -45,7 +60,8 @@ async function PanelContent({ id, filters }: { id: string; filters: ProposalFilt
       user ? isAdmin() : Promise.resolve(false),
       user ? getUserVote(id, user.id) : Promise.resolve(null),
     ]);
-    data = { user, proposal, comments, admin, userVote };
+    const target = await loadTarget(proposal);
+    data = { user, proposal, comments, admin, userVote, target };
   } catch (error) {
     console.error("[propositions] échec du chargement d'une proposition", error);
   }
@@ -59,6 +75,7 @@ async function PanelContent({ id, filters }: { id: string; filters: ProposalFilt
   return (
     <ProposalDetailView
       proposal={data.proposal}
+      target={data.target}
       comments={data.comments}
       userId={data.user?.id ?? null}
       userVote={data.userVote}

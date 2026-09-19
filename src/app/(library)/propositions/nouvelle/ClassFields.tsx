@@ -5,6 +5,7 @@ import {
   ABILITY_NAMES,
   CLASS_DESCRIPTION_MAX,
   FEATURE_DESCRIPTION_MAX,
+  FEATURE_DESCRIPTION_MAX_MODIFICATION,
   FEATURE_NAME_MAX,
   FEATURES_MAX,
   HIT_DICE,
@@ -16,6 +17,7 @@ import {
   SUBCLASS_DESCRIPTION_MAX,
   SUBCLASS_NAME_MAX,
   SUBCLASSES_MAX,
+  SUBCLASSES_MAX_MODIFICATION,
 } from "@/lib/proposals/payload-race-class";
 import styles from "../propositions.module.css";
 import { Field } from "./Field";
@@ -25,6 +27,8 @@ interface ClassFieldsProps {
   /** Valeurs saisies avant la dernière erreur (vide au premier affichage). */
   values: Record<string, string>;
   errors: Record<string, string>;
+  /** Modification d'une classe existante : aptitudes plus longues acceptées, description de sous-classe facultative. */
+  modification?: boolean;
 }
 
 function AbilityChecks({
@@ -57,7 +61,8 @@ function AbilityChecks({
   );
 }
 
-export function ClassFields({ values, errors }: ClassFieldsProps) {
+export function ClassFields({ values, errors, modification = false }: ClassFieldsProps) {
+  const featureDescriptionMax = modification ? FEATURE_DESCRIPTION_MAX_MODIFICATION : FEATURE_DESCRIPTION_MAX;
   const proficiencyHint = `Une valeur par ligne, ${PROFICIENCIES_MAX} au maximum.`;
   return (
     <>
@@ -186,14 +191,14 @@ export function ClassFields({ values, errors }: ClassFieldsProps) {
                 name={description.name}
                 label="Description de l'aptitude"
                 error={description.error}
-                hint={`${FEATURE_DESCRIPTION_MAX} caractères maximum.`}
+                hint={`${featureDescriptionMax} caractères maximum.`}
               >
                 {(props) => (
                   <textarea
                     {...props}
                     name={description.name}
                     defaultValue={description.defaultValue}
-                    maxLength={FEATURE_DESCRIPTION_MAX}
+                    maxLength={featureDescriptionMax}
                   />
                 )}
               </Field>
@@ -211,7 +216,7 @@ export function ClassFields({ values, errors }: ClassFieldsProps) {
         legend="Sous-classes (facultatif)"
         itemLabel="Sous-classe"
         addLabel="Ajouter une sous-classe"
-        max={SUBCLASSES_MAX}
+        max={modification ? SUBCLASSES_MAX_MODIFICATION : SUBCLASSES_MAX}
       >
         {(row) => {
           const level = row.field("available_from_level");
@@ -242,7 +247,7 @@ export function ClassFields({ values, errors }: ClassFieldsProps) {
               </div>
               <Field
                 name={description.name}
-                label="Description de la sous-classe"
+                label={modification ? "Description de la sous-classe (optionnelle)" : "Description de la sous-classe"}
                 error={description.error}
                 hint={`${SUBCLASS_DESCRIPTION_MAX} caractères maximum.`}
               >

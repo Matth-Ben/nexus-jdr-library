@@ -5,6 +5,7 @@ import {
   formatCategory,
   formatCost,
   formatRange,
+  toFrenchCost,
   mergeItemDetail,
   mergeItemListItems,
 } from "./translations";
@@ -260,5 +261,30 @@ describe("mergeItemDetail", () => {
     expect(result.rarity).toBeNull();
     expect(result.weaponProperties).toBeNull();
     expect(result.armorProperties).toBeNull();
+  });
+});
+
+describe("toFrenchCost", () => {
+  it("convertit les montants fractionnaires en gp vers la plus grande unité entière", () => {
+    expect(toFrenchCost({ amount: 50, currency: "gp" })).toEqual({ amount: 50, currency: "po" });
+    expect(toFrenchCost({ amount: 0.1, currency: "gp" })).toEqual({ amount: 1, currency: "pa" });
+    expect(toFrenchCost({ amount: 0.5, currency: "gp" })).toEqual({ amount: 5, currency: "pa" });
+    expect(toFrenchCost({ amount: 0.01, currency: "gp" })).toEqual({ amount: 1, currency: "pc" });
+    expect(toFrenchCost({ amount: 1.5, currency: "gp" })).toEqual({ amount: 15, currency: "pa" });
+    expect(toFrenchCost({ amount: 15, currency: "sp" })).toEqual({ amount: 15, currency: "pa" });
+    expect(toFrenchCost({ amount: 3, currency: "cp" })).toEqual({ amount: 3, currency: "pc" });
+  });
+
+  it("garde la devise pour un coût nul", () => {
+    expect(toFrenchCost({ amount: 0, currency: "gp" })).toEqual({ amount: 0, currency: "po" });
+    expect(toFrenchCost({ amount: 0, currency: "sp" })).toEqual({ amount: 0, currency: "pa" });
+  });
+
+  it("renvoie null pour un coût absent, incomplet ou d'une devise inconnue", () => {
+    expect(toFrenchCost(null)).toBeNull();
+    expect(toFrenchCost(undefined)).toBeNull();
+    expect(toFrenchCost({ amount: 3, currency: "xx" })).toBeNull();
+    expect(toFrenchCost({ amount: 3, currency: "" })).toBeNull();
+    expect(toFrenchCost({ amount: Number.NaN, currency: "gp" })).toBeNull();
   });
 });

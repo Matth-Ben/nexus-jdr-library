@@ -1,14 +1,27 @@
+import Link from "next/link";
+import { annotateSections, diffContent } from "@/lib/proposals/diff";
+import type { ExistingContent } from "@/lib/proposals/existing";
 import { authorLabel, formatProposalDate, renderPayload } from "@/lib/proposals/format";
+import { libraryHref } from "@/lib/proposals/target";
 import type { ProposalComment, ProposalDetail, VoteValue } from "@/lib/proposals/types";
 import { CommentForm } from "./CommentForm";
 import { PayloadSections } from "./PayloadSections";
-import { ProposalScore, StatusBadge, TypeBadge } from "./ProposalBadges";
+import { ProposalChanges } from "./ProposalChanges";
+import { ModificationBadge, ProposalScore, StatusBadge, TypeBadge } from "./ProposalBadges";
 import { DeleteCommentButton, DeleteProposalButton, ReviewPanel } from "./ProposalControls";
 import { VoteControls } from "./VoteControls";
 import styles from "./propositions.module.css";
 
+/** État de l'élément visé par une proposition de modification, tel que rechargé à l'affichage. */
+export type ProposalTarget =
+  | { status: "found"; existing: ExistingContent }
+  | { status: "missing" }
+  | { status: "error" };
+
 export interface ProposalDetailViewProps {
   proposal: ProposalDetail;
+  /** Renseigné pour une modification (`target_id` non nul) ; absent = chargement impossible. */
+  target?: ProposalTarget;
   comments: ProposalComment[];
   /** `null` pour un visiteur non connecté. */
   userId: string | null;
@@ -22,6 +35,7 @@ export interface ProposalDetailViewProps {
 
 export function ProposalDetailView({
   proposal,
+  target,
   comments,
   userId,
   userVote,
@@ -29,7 +43,16 @@ export function ProposalDetailView({
   returnTo,
   closeHref,
 }: ProposalDetailViewProps) {
-  const { rows, description, sections } = renderPayload(proposal.content_type, proposal.payload);
+  const rendered = renderPayload(proposal.content_type, proposal.payload);
+  const { rows, description } = rendered;
+  const isModification = proposal.target_id !== null && proposal.target_id !== undefined;
+  const found = isModification && target?.status === "found" ? target.existing : null;
+  // Le diff est recalculé à chaque affichage contre l'existant COURANT ; il ne peut pas planter sur un payload malformé.
+  const diff = found
+    ? diffContent(proposal.content_type, found, { title: proposal.title, payload: proposal.payload })
+    : null;
+  const sections = diff ? annotateSections(rendered.sections, diff) : rendered.sections;
+  const changedRows = new Set(diff?.changedRows ?? []);
   const isAuthor = userId !== null && userId === proposal.author_id;
   const reviewedDate = formatProposalDate(proposal.reviewed_at);
 
@@ -39,6 +62,7 @@ export function ProposalDetailView({
 
       <div className={styles.meta}>
         <TypeBadge type={proposal.content_type} />
+        {isModification ? <ModificationBadge /> : null}
         <StatusBadge status={proposal.status} />
         <span>
           Proposé par {authorLabel(proposal.author_name)} le {formatProposalDate(proposal.created_at)}
@@ -53,16 +77,50 @@ export function ProposalDetailView({
         </div>
       ) : null}
 
+      {isModification ? (
+        <p className={styles.targetLine}>
+          {found ? (
+            <>
+              Modification de <strong>« {found.title || "(sans nom)"} »</strong> (
+              <Link href={libraryHref(proposal.content_type, found.id)}>voir la fiche actuelle</Link>)
+            </>
+          ) : (
+            <>Modification d&apos;un élément de la bibliothèque (n° {proposal.target_id})</>
+          )}
+        </p>
+      ) : null}
+      {isModification && target?.status === "missing" ? (
+        <p className={styles.targetMissing} role="note">
+          Cet élément n&apos;existe plus dans la bibliothèque : la comparaison n&apos;est pas possible.
+        </p>
+      ) : null}
+      {isModification && (target === undefined || target.status === "error") ? (
+        <p className={styles.targetMissing} role="note">
+          Impossible de charger la version actuelle pour la comparer pour le moment.
+        </p>
+      ) : null}
+
+      {diff ? <ProposalChanges diff={diff} /> : null}
+
       <dl className={styles.detailGrid}>
         {rows.map((row) => (
-          <div key={row.label}>
-            <dt>{row.label}</dt>
+          <div key={row.label} className={changedRows.has(row.label) ? styles.rowChanged : undefined}>
+            <dt>
+              {row.label}
+              {changedRows.has(row.label) ? <span className={styles.itemMark}>modifié</span> : null}
+            </dt>
             <dd>{row.value}</dd>
           </div>
         ))}
       </dl>
 
-      {description ? <p className={styles.description}>{description}</p> : null}
+      {description ? (
+        <p className={styles.description}>
+          {diff?.descriptionChanged ? <span className={styles.itemMark}>modifiée</span> : null}
+          {diff?.descriptionChanged ? " " : null}
+          {description}
+        </p>
+      ) : null}
 
       <PayloadSections sections={sections} />
 

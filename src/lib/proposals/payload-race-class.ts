@@ -13,6 +13,7 @@ import {
   readText,
   type FieldErrors,
   type RawInput,
+  type ValidationOptions,
   type ValidationResult,
 } from "./validation-core";
 
@@ -50,10 +51,18 @@ export const PROFICIENCY_MAX_LENGTH = 80;
 export const SKILL_COUNT_MAX = 6;
 export const FEATURE_NAME_MAX = 100;
 export const FEATURE_DESCRIPTION_MAX = 3000;
+/**
+ * En modification, une aptitude existante peut être plus longue (jusqu'à 4 292
+ * caractères dans les données de référence) : borne relevée, la limite réelle
+ * restant celle du payload total (60 000 octets).
+ */
+export const FEATURE_DESCRIPTION_MAX_MODIFICATION = 5000;
 export const FEATURES_MAX = 40;
 export const SUBCLASS_NAME_MAX = 100;
 export const SUBCLASS_DESCRIPTION_MAX = 3000;
 export const SUBCLASSES_MAX = 8;
+/** En modification : jusqu'à 11 sous-classes dans les données de référence (Occultiste, Magicien). */
+export const SUBCLASSES_MAX_MODIFICATION = 15;
 export const LEVEL_MIN = 1;
 export const LEVEL_MAX = 20;
 
@@ -135,7 +144,7 @@ function readNamedText(
   input: RawInput,
   row: RowRef,
   errors: FieldErrors,
-  limits: { name: number; description: number },
+  limits: { name: number; description: number; descriptionRequired?: boolean },
 ): { name: string; description: string } | undefined {
   const name = readTextAt(input, `${row.read}.name`, `${row.error}.name`, errors, {
     required: true,
@@ -143,7 +152,7 @@ function readNamedText(
     requiredMessage: "Le nom est obligatoire.",
   });
   const description = readTextAt(input, `${row.read}.description`, `${row.error}.description`, errors, {
-    required: true,
+    required: limits.descriptionRequired !== false,
     max: limits.description,
     requiredMessage: "La description est obligatoire.",
   });
@@ -222,7 +231,7 @@ function readTraits(
   });
 }
 
-export function validateRace(input: RawInput): ValidationResult {
+export function validateRace(input: RawInput, options: ValidationOptions = {}): ValidationResult {
   const errors: FieldErrors = {};
   const title = readName(input, errors);
   const size = readEnum(input, "size", RACE_SIZES, errors, "La taille est obligatoire.");
@@ -239,7 +248,8 @@ export function validateRace(input: RawInput): ValidationResult {
     itemMax: LANGUAGE_MAX_LENGTH,
     noun: "langues",
   });
-  const traits = readTraits(input, errors, "traits", "traits", 1, TRAITS_MAX);
+  // En modification, une race sans trait existe dans les données de référence.
+  const traits = readTraits(input, errors, "traits", "traits", options.modification === true ? 0 : 1, TRAITS_MAX);
 
   const subraces = readList(input, errors, {
     readPrefix: "subraces",
@@ -332,7 +342,8 @@ function readSkillChoices(
   return { count, choices: checked };
 }
 
-export function validateClass(input: RawInput): ValidationResult {
+export function validateClass(input: RawInput, options: ValidationOptions = {}): ValidationResult {
+  const modification = options.modification === true;
   const errors: FieldErrors = {};
   const title = readName(input, errors);
   const description = readText(input, "description", errors, {
@@ -390,7 +401,7 @@ export function validateClass(input: RawInput): ValidationResult {
       });
       const text = readNamedText(input, row, errs, {
         name: FEATURE_NAME_MAX,
-        description: FEATURE_DESCRIPTION_MAX,
+        description: modification ? FEATURE_DESCRIPTION_MAX_MODIFICATION : FEATURE_DESCRIPTION_MAX,
       });
       return level === undefined || text === undefined ? undefined : { level, ...text };
     },
@@ -405,7 +416,7 @@ export function validateClass(input: RawInput): ValidationResult {
     readPrefix: "subclasses",
     errorPrefix: "subclasses",
     min: 0,
-    max: SUBCLASSES_MAX,
+    max: modification ? SUBCLASSES_MAX_MODIFICATION : SUBCLASSES_MAX,
     noun: "sous-classe",
     nounPlural: "sous-classes",
     parseRow: (row, errs) => {
@@ -419,6 +430,8 @@ export function validateClass(input: RawInput): ValidationResult {
       const text = readNamedText(input, row, errs, {
         name: SUBCLASS_NAME_MAX,
         description: SUBCLASS_DESCRIPTION_MAX,
+        // En modification, la description d'une sous-classe peut manquer en base.
+        descriptionRequired: !modification,
       });
       return level === undefined || text === undefined
         ? undefined

@@ -14,6 +14,19 @@ export type ValidationResult =
 /** Entrée brute : un `FormData` ou un objet quelconque (JSON, tests). */
 export type RawInput = FormData | Record<string, unknown>;
 
+/**
+ * Options de validation. `modification` : la proposition modifie un élément
+ * existant de la bibliothèque. Les bornes sont alors assouplies pour accepter
+ * les données de référence réelles (voir `existing.ts`) : champs facultatifs
+ * quand la base peut les laisser vides, aptitudes de classe plus longues,
+ * école héritée d'un ancien vocabulaire (`allowedSchools`).
+ */
+export interface ValidationOptions {
+  modification?: boolean;
+  /** Écoles supplémentaires acceptées (l'école actuelle du sort ciblé, si elle est hors liste). */
+  allowedSchools?: readonly string[];
+}
+
 // --- Lecture défensive -------------------------------------------------------
 
 export function rawValue(input: RawInput, name: string): unknown {
@@ -27,6 +40,15 @@ export function rawValue(input: RawInput, name: string): unknown {
 export function stripControl(value: string): string {
   // U+0000 est refusé par jsonb/text côté Postgres.
   return value.replaceAll("\u0000", "");
+}
+
+/**
+ * Un navigateur envoie les sauts de ligne d'un textarea en CRLF : on les ramene a LF
+ * (forme stockee en base et affichee), sans quoi un texte renvoye tel quel ne serait pas
+ * identique a l'original.
+ */
+export function normalizeNewlines(value: string): string {
+  return value.replace(/\r\n?/g, "\n");
 }
 
 export function length(value: string): number {
@@ -53,7 +75,7 @@ export function readText(input: RawInput, name: string, errors: FieldErrors, opt
     errors[name] = "Valeur invalide.";
     return undefined;
   }
-  const text = stripControl(value).trim();
+  const text = normalizeNewlines(stripControl(value)).trim();
   if (text === "") {
     if (options.required) {
       errors[name] = options.requiredMessage ?? "Ce champ est obligatoire.";

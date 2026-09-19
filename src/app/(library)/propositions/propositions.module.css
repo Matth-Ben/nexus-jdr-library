@@ -589,3 +589,118 @@
   letter-spacing: 0.04em;
   opacity: 0.7;
 }
+
+/* Propositions de modification d'un élément existant */
+
+.badgeModification {
+  background: rgba(41, 128, 185, 0.15);
+  color: #21618c;
+}
+
+.modeSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+}
+
+.targetBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(41, 128, 185, 0.5);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.targetBanner ul {
+  padding-left: 18px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.pickerSummary {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.pickerHint {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.targetLine {
+  font-size: 15px;
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(41, 128, 185, 0.5);
+  border-radius: 8px;
+}
+
+.changes h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.changeList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.changeLabel {
+  font-weight: 600;
+}
+
+.changeBefore {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+.changeText details {
+  margin-top: 4px;
+}
+
+.changeText p {
+  margin-top: 6px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.rowChanged {
+  border-left: 3px solid #2980b9;
+  padding-left: 8px;
+}
+
+.itemMark {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(41, 128, 185, 0.15);
+  color: #21618c;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.notePanel {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.targetMissing {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.85;
+}

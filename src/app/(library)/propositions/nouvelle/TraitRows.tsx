@@ -17,10 +17,12 @@ interface TraitRowsProps {
   errors: Record<string, string>;
   /** Numéro (à partir de 1) de la sous-race propriétaire ; absent pour les traits de la race. Traits facultatifs, moins nombreux. */
   subraceNumber?: number;
+  /** Traits de la race facultatifs (modification d'une race qui n'en a aucun). */
+  optional?: boolean;
 }
 
 /** Lignes « nom + description » des traits d'une race ou d'une sous-race. */
-export function TraitRows({ name, valueName, errorName, values, errors, subraceNumber }: TraitRowsProps) {
+export function TraitRows({ name, valueName, errorName, values, errors, subraceNumber, optional = false }: TraitRowsProps) {
   const subrace = subraceNumber !== undefined;
   // Les libellés portent le numéro de la sous-race : sans lui, les boutons des différentes listes seraient indiscernables.
   const of = subrace ? ` de la sous-race ${subraceNumber}` : "";
@@ -35,9 +37,15 @@ export function TraitRows({ name, valueName, errorName, values, errors, subraceN
       itemLabel="Trait"
       itemContext={of}
       addLabel={`Ajouter un trait${of}`}
-      min={subrace ? 0 : 1}
+      min={subrace || optional ? 0 : 1}
       max={subrace ? SUBRACE_TRAITS_MAX : TRAITS_MAX}
-      hint={subrace ? undefined : "Au moins un trait : ils tiennent lieu de description de la race."}
+      hint={
+        subrace
+          ? undefined
+          : optional
+            ? "Les traits tiennent lieu de description de la race."
+            : "Au moins un trait : ils tiennent lieu de description de la race."
+      }
     >
       {(row) => {
         const traitName = row.field("name");

@@ -19,6 +19,7 @@ const PROPOSAL: ProposalDetail = {
   author_id: "author",
   author_name: "Élodie",
   content_type: "feat",
+  target_id: null,
   title: "Chanceux",
   status: "pending",
   votes_up: 2,

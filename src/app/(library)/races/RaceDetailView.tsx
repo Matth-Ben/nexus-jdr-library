@@ -1,5 +1,6 @@
 import type { RaceDetail } from "@/lib/races/types";
 import { sizeLabel, sourceLabel, speedLabel } from "./RacesListView";
+import { ProposeModificationLink } from "@/components/ProposeModificationLink";
 import styles from "./races.module.css";
 
 export interface RaceDetailViewProps {
@@ -89,6 +90,8 @@ export function RaceDetailView({ race }: RaceDetailViewProps) {
           <p className={styles.empty}>Cette race n&apos;a pas de sous-race.</p>
         )}
       </div>
+
+      <ProposeModificationLink type="race" id={race.id} />
     </div>
   );
 }

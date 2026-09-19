@@ -12,6 +12,11 @@ export function TypeBadge({ type }: { type: ProposalType }) {
   return <span className={styles.badge}>{TYPE_LABELS[type]}</span>;
 }
 
+/** Badge des propositions de modification (à côté du badge de type). */
+export function ModificationBadge() {
+  return <span className={`${styles.badge} ${styles.badgeModification}`}>Modification</span>;
+}
+
 export function StatusBadge({ status }: { status: ProposalStatus }) {
   return <span className={`${styles.badge} ${STATUS_CLASS[status]}`}>{STATUS_LABELS[status]}</span>;
 }

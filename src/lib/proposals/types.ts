@@ -9,6 +9,10 @@ export type ProposalType = (typeof PROPOSAL_TYPES)[number];
 export const PROPOSAL_STATUSES = ["pending", "approved", "rejected"] as const;
 export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
+export const PROPOSAL_ORIGINS = ["nouveau", "modification"] as const;
+/** Origine d'une proposition : nouveau contenu (`target_id` nul) ou modification d'un existant. */
+export type ProposalOrigin = (typeof PROPOSAL_ORIGINS)[number];
+
 export type VoteValue = "up" | "down";
 
 /** Ligne de la liste (sans `payload`, volumineux et inutile ici). */
@@ -18,6 +22,8 @@ export interface ProposalListItem {
   /** Nom d'affichage (`user_metadata.full_name`), `null` si non renseigné. Jamais l'e-mail. */
   author_name: string | null;
   content_type: ProposalType;
+  /** Identifiant de l'élément de référence visé (modification), `null` pour un nouveau contenu. */
+  target_id: number | null;
   title: string;
   status: ProposalStatus;
   votes_up: number;
@@ -45,4 +51,6 @@ export interface ProposalComment {
 export interface ProposalFilters {
   status: ProposalStatus;
   type?: ProposalType;
+  /** `undefined` : toutes les propositions. */
+  origin?: ProposalOrigin;
 }

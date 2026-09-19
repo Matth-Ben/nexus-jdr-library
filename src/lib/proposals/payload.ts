@@ -10,10 +10,11 @@ import {
   length,
   type FieldErrors,
   type RawInput,
+  type ValidationOptions,
   type ValidationResult,
 } from "./validation-core";
 
-export type { FieldErrors, RawInput, ValidationResult } from "./validation-core";
+export type { FieldErrors, RawInput, ValidationOptions, ValidationResult } from "./validation-core";
 
 /**
  * Validateurs PURS du contenu d'une proposition. Ils ne font confiance à rien :
@@ -112,8 +113,9 @@ function finish(
 
 // --- Validateurs par type ---------------------------------------------------
 
-export function validateSpell(input: RawInput): ValidationResult {
+export function validateSpell(input: RawInput, options: ValidationOptions = {}): ValidationResult {
   const errors: FieldErrors = {};
+  const modification = options.modification === true;
   const title = validateTitle(input, errors);
   const description = readText(input, "description", errors, { required: true, max: DESCRIPTION_MAX });
 
@@ -130,10 +132,25 @@ export function validateSpell(input: RawInput): ValidationResult {
     errors.level = "Le niveau doit être un entier entre 0 et 9.";
   }
 
-  const school = readEnum(input, "school", SPELL_SCHOOLS, errors, "L'école est obligatoire.");
-  const castingTime = readText(input, "casting_time", errors, { required: true, max: SHORT_TEXT_MAX });
-  const range = readText(input, "range", errors, { required: true, max: SHORT_TEXT_MAX });
-  const duration = readText(input, "duration", errors, { required: true, max: SHORT_TEXT_MAX });
+  // En modification, école, temps, portée et durée sont nullables en base : vides = absents du payload.
+  const schoolRaw = rawValue(input, "school");
+  const schoolEmpty =
+    schoolRaw === undefined || schoolRaw === null || (typeof schoolRaw === "string" && schoolRaw.trim() === "");
+  const school =
+    modification && schoolEmpty
+      ? undefined
+      : readEnum(
+          input,
+          "school",
+          [...SPELL_SCHOOLS, ...(modification ? (options.allowedSchools ?? []) : [])],
+          errors,
+          "L'école est obligatoire.",
+        );
+  const shortText = (name: string) => readText(input, name, errors, { required: !modification, max: SHORT_TEXT_MAX });
+  const castingTime = shortText("casting_time");
+  const range = shortText("range");
+  const duration = shortText("duration");
+  const orAbsent = (value: string | undefined) => (modification && value === "" ? undefined : value);
 
   // `components` : objet imbriqué (JSON) ou champs plats `component_*` (formulaire).
   const nested = (input as Record<string, unknown>).components;
@@ -157,9 +174,9 @@ export function validateSpell(input: RawInput): ValidationResult {
       description,
       level,
       school,
-      casting_time: castingTime,
-      range,
-      duration,
+      casting_time: orAbsent(castingTime),
+      range: orAbsent(range),
+      duration: orAbsent(duration),
       components,
       concentration,
       ritual,
@@ -181,10 +198,14 @@ export function validateFeat(input: RawInput): ValidationResult {
   return finish(title, payload, errors);
 }
 
-export function validateItem(input: RawInput): ValidationResult {
+export function validateItem(input: RawInput, options: ValidationOptions = {}): ValidationResult {
   const errors: FieldErrors = {};
   const title = validateTitle(input, errors);
-  const description = readText(input, "description", errors, { required: true, max: DESCRIPTION_MAX });
+  // En modification, la description peut être absente de la base (19 objets sur 86) : vide acceptée.
+  const description = readText(input, "description", errors, {
+    required: options.modification !== true,
+    max: DESCRIPTION_MAX,
+  });
   const category = readEnum(input, "category", ITEM_CATEGORIES, errors, "La catégorie est obligatoire.");
 
   const payload: Record<string, unknown> = { description, category };
@@ -224,18 +245,18 @@ export function validateItem(input: RawInput): ValidationResult {
   return finish(title, payload, errors);
 }
 
-export function validateProposal(type: unknown, input: RawInput): ValidationResult {
+export function validateProposal(type: unknown, input: RawInput, options: ValidationOptions = {}): ValidationResult {
   if (!isProposalType(type)) {
     return { ok: false, errors: { content_type: "Type de contenu invalide." } };
   }
-  const validators: Record<ProposalType, (input: RawInput) => ValidationResult> = {
+  const validators: Record<ProposalType, (input: RawInput, options?: ValidationOptions) => ValidationResult> = {
     spell: validateSpell,
     feat: validateFeat,
     item: validateItem,
     race: validateRace,
     class: validateClass,
   };
-  return validators[type](input);
+  return validators[type](input, options);
 }
 
 // --- Commentaire et motif ----------------------------------------------------

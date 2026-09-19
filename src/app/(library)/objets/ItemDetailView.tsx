@@ -1,6 +1,7 @@
 import { formatAcDexBonus, formatCategory, formatCost, formatRange } from "@/lib/items/translations";
 import type { ItemDetail } from "@/lib/items/types";
 import { formatWeight } from "./ItemsListView";
+import { ProposeModificationLink } from "@/components/ProposeModificationLink";
 import styles from "./objets.module.css";
 
 export interface ItemDetailViewProps {
@@ -96,6 +97,8 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
           </dl>
         </>
       ) : null}
+
+      <ProposeModificationLink type="item" id={item.id} />
     </div>
   );
 }

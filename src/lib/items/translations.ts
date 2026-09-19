@@ -76,15 +76,38 @@ export function formatCost(cost: ItemCost | null | undefined): string {
   if (!cost || cost.amount === undefined || cost.amount === null || !cost.currency) {
     return MISSING_TEXT;
   }
-  const currency = CURRENCIES[cost.currency];
-  if (!currency) {
+  const french = toFrenchCost(cost);
+  if (!french) {
     return `${cost.amount} ${cost.currency}`;
   }
+  return `${french.amount} ${french.currency}`;
+}
+
+/** Devises françaises du formulaire de proposition (`po`, `pa`, `pc`). */
+export type FrenchCurrency = "po" | "pa" | "pc";
+
+/**
+ * Convertit `items.cost` (`{amount, currency}`, devise anglaise `gp`/`sp`/`cp`,
+ * montants fractionnaires) en `{amount, currency}` français, sur la même règle
+ * que `formatCost` : la plus grande unité qui donne un entier (`0.1 gp` →
+ * 1 pa, `50 gp` → 50 po, `0.01 gp` → 1 pc). Les sous-pièces de cuivre sont
+ * arrondies. `null` si le coût est absent, incomplet ou d'une devise inconnue.
+ */
+export function toFrenchCost(
+  cost: ItemCost | null | undefined,
+): { amount: number; currency: FrenchCurrency } | null {
+  if (!cost || typeof cost.amount !== "number" || !Number.isFinite(cost.amount) || !cost.currency) {
+    return null;
+  }
+  const currency = Object.hasOwn(CURRENCIES, cost.currency) ? CURRENCIES[cost.currency] : undefined;
+  if (!currency) {
+    return null;
+  }
   const copper = Math.round(cost.amount * currency.copper);
-  if (copper > 0 && copper % 100 === 0) return `${copper / 100} po`;
-  if (copper > 0 && copper % 10 === 0) return `${copper / 10} pa`;
-  if (copper === 0) return `0 ${currency.label}`;
-  return `${copper} pc`;
+  if (copper > 0 && copper % 100 === 0) return { amount: copper / 100, currency: "po" };
+  if (copper > 0 && copper % 10 === 0) return { amount: copper / 10, currency: "pa" };
+  if (copper === 0) return { amount: 0, currency: currency.label as FrenchCurrency };
+  return { amount: copper, currency: "pc" };
 }
 
 /**
