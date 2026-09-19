@@ -50,9 +50,6 @@ export function CategoryNav({ userEmail }: CategoryNavProps) {
         <div className={styles.account}>
           {userEmail ? (
             <form action={signOut} className={styles.accountForm}>
-              <span className={styles.email} title={userEmail}>
-                {userEmail}
-              </span>
               <button type="submit" className={styles.accountButton}>
                 Se déconnecter
               </button>
