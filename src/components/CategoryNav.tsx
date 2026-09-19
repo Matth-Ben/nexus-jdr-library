@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "@/app/(library)/connexion/actions";
 import styles from "./CategoryNav.module.css";
 
 const CATEGORIES = [
@@ -12,7 +13,12 @@ const CATEGORIES = [
   { href: "/objets", label: "Objets" },
 ] as const;
 
-export function CategoryNav() {
+interface CategoryNavProps {
+  /** E-mail de l'utilisateur connecté, `null` pour un visiteur. */
+  userEmail: string | null;
+}
+
+export function CategoryNav({ userEmail }: CategoryNavProps) {
   const pathname = usePathname();
 
   return (
@@ -37,6 +43,26 @@ export function CategoryNav() {
             );
           })}
         </ul>
+
+        <div className={styles.account}>
+          {userEmail ? (
+            <form action={signOut} className={styles.accountForm}>
+              <span className={styles.email} title={userEmail}>
+                {userEmail}
+              </span>
+              <button type="submit" className={styles.accountButton}>
+                Se déconnecter
+              </button>
+            </form>
+          ) : pathname.startsWith("/connexion") ? null : (
+            <Link
+              href={`/connexion?next=${encodeURIComponent(pathname)}`}
+              className={styles.accountButton}
+            >
+              Se connecter
+            </Link>
+          )}
+        </div>
       </nav>
     </header>
   );
