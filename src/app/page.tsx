@@ -28,6 +28,9 @@ export default function Home() {
           <Link className={styles.secondary} href="/objets">
             Objets
           </Link>
+          <Link className={styles.secondary} href="/propositions">
+            Propositions
+          </Link>
         </div>
       </main>
     </div>

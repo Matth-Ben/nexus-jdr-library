@@ -11,6 +11,7 @@ const CATEGORIES = [
   { href: "/races", label: "Races" },
   { href: "/dons", label: "Dons" },
   { href: "/objets", label: "Objets" },
+  { href: "/propositions", label: "Propositions" },
 ] as const;
 
 interface CategoryNavProps {

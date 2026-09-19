@@ -23,7 +23,7 @@ export function parseOpenId(raw: RawSearchParams[string]): number | undefined {
 }
 
 /** URL de la liste avec les filtres en cours et l'élément `id` ouvert dans le panneau. */
-export function panelHref(base: string, filters: Record<string, ParamValue>, id: number): string {
+export function panelHref(base: string, filters: Record<string, ParamValue>, id: number | string): string {
   return `${base}?${toQueryString({ ...filters, open: id })}`;
 }
 

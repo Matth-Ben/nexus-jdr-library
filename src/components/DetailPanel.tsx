@@ -9,7 +9,7 @@ interface DetailPanelProps {
   /** URL de la liste sans `?open=` : cible du bouton, du fond et de la touche Échap. */
   closeHref: string;
   /** Change quand un autre élément est ouvert : remet le panneau en haut. */
-  resetKey: number;
+  resetKey: number | string;
   children: ReactNode;
 }
 
