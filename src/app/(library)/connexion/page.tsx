@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { createSessionClient } from "@/lib/supabase/server";
@@ -33,6 +34,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       </p>
 
       <LoginForm next={next} />
+
+      <p className={styles.hint}>
+        <Link href="/mot-de-passe-oublie">Mot de passe oublié ?</Link>
+      </p>
 
       <p className={styles.hint}>
         Pas encore de compte ? L&apos;inscription se fait depuis l&apos;application mobile Nexus JDR ;

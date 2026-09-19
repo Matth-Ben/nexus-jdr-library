@@ -18,6 +18,8 @@ interface CategoryNavProps {
   userEmail: string | null;
 }
 
+const AUTH_PATHS = ["/connexion", "/mot-de-passe-oublie", "/reinitialisation"];
+
 export function CategoryNav({ userEmail }: CategoryNavProps) {
   const pathname = usePathname();
 
@@ -54,7 +56,7 @@ export function CategoryNav({ userEmail }: CategoryNavProps) {
                 Se déconnecter
               </button>
             </form>
-          ) : pathname.startsWith("/connexion") ? null : (
+          ) : AUTH_PATHS.some((path) => pathname.startsWith(path)) ? null : (
             <Link
               href={`/connexion?next=${encodeURIComponent(pathname)}`}
               className={styles.accountButton}

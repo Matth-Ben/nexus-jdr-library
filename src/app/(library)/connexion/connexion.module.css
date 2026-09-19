@@ -64,3 +64,16 @@
   color: #c0392b;
   font-size: 14px;
 }
+
+.success {
+  padding: 12px 14px;
+  border: 1px solid #27ae60;
+  border-radius: 6px;
+  color: #1e8449;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.hint a {
+  text-decoration: underline;
+}
