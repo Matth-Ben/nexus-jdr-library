@@ -1,0 +1,233 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.page h1 {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.backLink {
+  align-self: flex-start;
+  font-size: 14px;
+  color: var(--foreground);
+  opacity: 0.75;
+}
+
+.backLink:hover {
+  opacity: 1;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  min-width: 160px;
+}
+
+.filters input {
+  padding: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.filters button {
+  padding: 9px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.summary {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.empty,
+.error {
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed rgba(128, 128, 128, 0.4);
+  font-size: 15px;
+}
+
+.error {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.row {
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+}
+
+.rowLink {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.rowLink:hover {
+  background: rgba(128, 128, 128, 0.08);
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(155, 89, 182, 0.15);
+  color: #8e44ad;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+}
+
+.detailGrid dt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.detailGrid dd {
+  font-size: 15px;
+  margin-top: 2px;
+}
+
+.description {
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+}
+
+.featureItem {
+  padding: 12px 16px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+}
+
+.featureHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.featureDescription {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.85;
+  white-space: pre-line;
+}
+
+.subclassList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.subclassItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.rowLinkActive {
+  background: rgba(128, 128, 128, 0.16);
+}

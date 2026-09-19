@@ -1,0 +1,48 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+  background: var(--background);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  overflow-x: auto;
+}
+
+.brand {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.list {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+}
+
+.link {
+  display: block;
+  padding: 14px 12px;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.link:hover {
+  opacity: 1;
+}
+
+.linkActive {
+  border-bottom-color: currentColor;
+  font-weight: 600;
+  opacity: 1;
+}
