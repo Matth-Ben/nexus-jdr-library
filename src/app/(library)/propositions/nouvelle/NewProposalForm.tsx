@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState } from "react";
 import { formatCategory } from "@/lib/items/translations";
 import {
   CURRENCIES,
@@ -13,45 +13,16 @@ import {
   SPELL_SCHOOLS,
   TITLE_MAX,
 } from "@/lib/proposals/payload";
+import { NAME_MAX } from "@/lib/proposals/payload-race-class";
 import { TYPE_LABELS } from "@/lib/proposals/format";
 import type { ProposalType } from "@/lib/proposals/types";
 import { createProposal, type ProposalFormState } from "../actions";
 import styles from "../propositions.module.css";
+import { ClassFields } from "./ClassFields";
+import { Field } from "./Field";
+import { RaceFields } from "./RaceFields";
 
 const INITIAL_STATE: ProposalFormState = {};
-
-interface FieldProps {
-  name: string;
-  label: string;
-  error?: string;
-  hint?: string;
-  children: (props: { id: string; "aria-invalid"?: true; "aria-describedby"?: string }) => ReactNode;
-}
-
-function Field({ name, label, error, hint, children }: FieldProps) {
-  const id = `proposal-${name}`;
-  const describedBy = [error ? `${id}-error` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ");
-  return (
-    <div className={styles.field}>
-      <label htmlFor={id}>{label}</label>
-      {children({
-        id,
-        "aria-invalid": error ? true : undefined,
-        "aria-describedby": describedBy || undefined,
-      })}
-      {hint ? (
-        <span id={`${id}-hint`} className={styles.hint}>
-          {hint}
-        </span>
-      ) : null}
-      {error ? (
-        <span id={`${id}-error`} role="alert" className={styles.inlineError}>
-          {error}
-        </span>
-      ) : null}
-    </div>
-  );
-}
 
 export function NewProposalForm({ type }: { type: ProposalType }) {
   const [state, formAction, pending] = useActionState(createProposal, INITIAL_STATE);
@@ -60,6 +31,7 @@ export function NewProposalForm({ type }: { type: ProposalType }) {
   // Les valeurs conservées ne valent que pour le type soumis.
   const kept = values.content_type === type ? values : {};
   const checked = (name: string) => kept[name] !== undefined && kept[name] !== "";
+  const isRaceOrClass = type === "race" || type === "class";
   const errorKeys = Object.keys(errors).filter((key) => key !== "_form");
 
   return (
@@ -78,9 +50,24 @@ export function NewProposalForm({ type }: { type: ProposalType }) {
         </p>
       ) : null}
 
-      <Field name="title" label={`Titre (${TYPE_LABELS[type].toLowerCase()})`} error={errors.title}>
-        {(props) => <input {...props} name="title" type="text" defaultValue={kept.title ?? ""} maxLength={TITLE_MAX} />}
+      <Field
+        name="title"
+        label={isRaceOrClass ? `Nom de la ${TYPE_LABELS[type].toLowerCase()}` : `Titre (${TYPE_LABELS[type].toLowerCase()})`}
+        error={errors.title}
+      >
+        {(props) => (
+          <input
+            {...props}
+            name="title"
+            type="text"
+            defaultValue={kept.title ?? ""}
+            maxLength={isRaceOrClass ? NAME_MAX : TITLE_MAX}
+          />
+        )}
       </Field>
+
+      {type === "race" ? <RaceFields key={state.nonce} values={kept} errors={errors} /> : null}
+      {type === "class" ? <ClassFields key={state.nonce} values={kept} errors={errors} /> : null}
 
       {type === "spell" ? (
         <>
@@ -254,14 +241,18 @@ export function NewProposalForm({ type }: { type: ProposalType }) {
         </>
       ) : null}
 
-      <Field
-        name="description"
-        label="Description"
-        error={errors.description}
-        hint={`${DESCRIPTION_MAX} caractères maximum.`}
-      >
-        {(props) => <textarea {...props} name="description" defaultValue={kept.description ?? ""} maxLength={DESCRIPTION_MAX} />}
-      </Field>
+      {!isRaceOrClass ? (
+        <Field
+          name="description"
+          label="Description"
+          error={errors.description}
+          hint={`${DESCRIPTION_MAX} caractères maximum.`}
+        >
+          {(props) => (
+            <textarea {...props} name="description" defaultValue={kept.description ?? ""} maxLength={DESCRIPTION_MAX} />
+          )}
+        </Field>
+      ) : null}
 
       <p className={styles.notice}>
         Propose uniquement du contenu original (homebrew) : pas de recopie de contenu protégé au-delà du SRD. Ta

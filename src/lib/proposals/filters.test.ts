@@ -15,7 +15,7 @@ describe("parseProposalFilters", () => {
   });
 
   it("retombe sur les défauts pour toute valeur inconnue ou vide", () => {
-    expect(parseProposalFilters({ statut: "all", type: "class" })).toEqual({ status: "pending", type: undefined });
+    expect(parseProposalFilters({ statut: "all", type: "monster" })).toEqual({ status: "pending", type: undefined });
     expect(parseProposalFilters({ statut: "", type: "" })).toEqual({ status: "pending", type: undefined });
     expect(parseProposalFilters({ statut: "APPROVED" }).status).toBe("pending");
   });
@@ -28,15 +28,27 @@ describe("parseProposalFilters", () => {
   });
 });
 
+describe("parseProposalFilters — race et class", () => {
+  it("accepte type=race et type=class", () => {
+    expect(parseProposalFilters({ type: "race" })).toEqual({ status: "pending", type: "race" });
+    expect(parseProposalFilters({ statut: "approved", type: "class" })).toEqual({ status: "approved", type: "class" });
+  });
+  it("conserve le type dans les liens", () => {
+    expect(filterParams({ status: "pending", type: "race" })).toEqual({ statut: undefined, type: "race" });
+  });
+});
+
 describe("parseFormType", () => {
   it("vaut spell par défaut ou si invalide", () => {
     expect(parseFormType(undefined)).toBe("spell");
     expect(parseFormType("x")).toBe("spell");
     expect(parseFormType("")).toBe("spell");
   });
-  it("accepte feat et item", () => {
+  it("accepte feat, item, race et class", () => {
     expect(parseFormType("feat")).toBe("feat");
     expect(parseFormType(["item"])).toBe("item");
+    expect(parseFormType("race")).toBe("race");
+    expect(parseFormType(" class ")).toBe("class");
   });
 });
 

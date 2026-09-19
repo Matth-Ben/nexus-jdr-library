@@ -1,6 +1,7 @@
 import { authorLabel, formatProposalDate, renderPayload } from "@/lib/proposals/format";
 import type { ProposalComment, ProposalDetail, VoteValue } from "@/lib/proposals/types";
 import { CommentForm } from "./CommentForm";
+import { PayloadSections } from "./PayloadSections";
 import { ProposalScore, StatusBadge, TypeBadge } from "./ProposalBadges";
 import { DeleteCommentButton, DeleteProposalButton, ReviewPanel } from "./ProposalControls";
 import { VoteControls } from "./VoteControls";
@@ -28,7 +29,7 @@ export function ProposalDetailView({
   returnTo,
   closeHref,
 }: ProposalDetailViewProps) {
-  const { rows, description } = renderPayload(proposal.content_type, proposal.payload);
+  const { rows, description, sections } = renderPayload(proposal.content_type, proposal.payload);
   const isAuthor = userId !== null && userId === proposal.author_id;
   const reviewedDate = formatProposalDate(proposal.reviewed_at);
 
@@ -62,6 +63,8 @@ export function ProposalDetailView({
       </dl>
 
       {description ? <p className={styles.description}>{description}</p> : null}
+
+      <PayloadSections sections={sections} />
 
       <section className={styles.section} aria-label="Avis">
         <h2>Ton avis</h2>

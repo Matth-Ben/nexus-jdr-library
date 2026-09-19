@@ -3,7 +3,7 @@
  * `20260919090000_create_content_proposals.sql` du dépôt web (source de vérité).
  */
 
-export const PROPOSAL_TYPES = ["spell", "feat", "item"] as const;
+export const PROPOSAL_TYPES = ["spell", "feat", "item", "race", "class"] as const;
 export type ProposalType = (typeof PROPOSAL_TYPES)[number];
 
 export const PROPOSAL_STATUSES = ["pending", "approved", "rejected"] as const;

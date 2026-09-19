@@ -21,6 +21,8 @@ export interface ProposalFormState {
   errors?: FieldErrors;
   /** Valeurs saisies, renvoyées pour préremplir le formulaire après une erreur. */
   values?: Record<string, string>;
+  /** Change à chaque soumission : les champs à lignes répétables se reconstruisent depuis `values`. */
+  nonce?: string;
 }
 
 export interface ActionState {
@@ -73,7 +75,7 @@ export async function createProposal(_previous: ProposalFormState, formData: For
 
   const result = validateProposal(contentType, formData);
   if (!result.ok) {
-    return { errors: result.errors, values };
+    return { errors: result.errors, values, nonce: crypto.randomUUID() };
   }
 
   const { data, error } = await supabase
@@ -84,7 +86,7 @@ export async function createProposal(_previous: ProposalFormState, formData: For
 
   if (error || !data) {
     logFailure("createProposal", error ?? {});
-    return { errors: { _form: "Ta proposition n'a pas pu être enregistrée. Réessaie plus tard." }, values };
+    return { errors: { _form: "Ta proposition n'a pas pu être enregistrée. Réessaie plus tard." }, values, nonce: crypto.randomUUID() };
   }
 
   revalidatePath("/propositions");

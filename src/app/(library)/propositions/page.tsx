@@ -18,7 +18,7 @@ import { ProposalsListView } from "./ProposalsListView";
 
 export const metadata: Metadata = {
   title: "Propositions — Nexus JDR Bibliothèque",
-  description: "Propositions de contenu de la communauté : sorts, dons et objets à discuter et à voter.",
+  description: "Propositions de contenu de la communauté : sorts, dons, objets, races et classes à discuter et à voter.",
 };
 
 interface ProposalsPageProps {

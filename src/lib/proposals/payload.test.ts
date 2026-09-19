@@ -270,7 +270,7 @@ describe("validateProposal", () => {
     expect(validateProposal("spell", form({ title: "T", description: "D" })).ok).toBe(false);
   });
 
-  it.each(["class", "", undefined, null, 3, "Spell"])("refuse le type %j", (type) => {
+  it.each(["monster", "", undefined, null, 3, "Spell"])("refuse le type %j", (type) => {
     const result = validateProposal(type, form({ title: "T", description: "D" }) as RawInput);
     expect(!result.ok && result.errors.content_type).toBeDefined();
   });

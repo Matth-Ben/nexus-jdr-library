@@ -1,12 +1,16 @@
 import { formatCategory, formatCost } from "@/lib/items/translations";
 import { formatComponents } from "@/lib/spells/translations";
 import { RARITY_LABELS } from "./payload";
+import { classContent, raceContent } from "./format-race-class";
+import { asRecord, asText, type PayloadRow, type RenderedPayload } from "./payload-view";
 import type { ProposalStatus, ProposalType } from "./types";
 
 export const TYPE_LABELS: Record<ProposalType, string> = {
   spell: "Sort",
   feat: "Don",
   item: "Objet",
+  race: "Race",
+  class: "Classe",
 };
 
 export const STATUS_LABELS: Record<ProposalStatus, string> = {
@@ -40,28 +44,7 @@ export function levelLabel(level: number): string {
   return level === 0 ? "Tour de magie" : `Niveau ${level}`;
 }
 
-export interface PayloadRow {
-  label: string;
-  value: string;
-}
-
-export interface RenderedPayload {
-  rows: PayloadRow[];
-  /** Texte long, affiché sous la grille. `null` si absent ou illisible. */
-  description: string | null;
-}
-
-// --- Lecture défensive : le payload n'est validé par aucune contrainte en base ---
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function asText(value: unknown): string | null {
-  return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
-}
+export type { PayloadItem, PayloadRow, PayloadSection, RenderedPayload } from "./payload-view";
 
 function yesNo(value: unknown): string {
   return value === true ? "Oui" : "Non";
@@ -132,9 +115,11 @@ function itemRows(payload: Record<string, unknown>): PayloadRow[] {
   return rows;
 }
 
-/** Rend le payload d'une proposition en lignes label/valeur + description, quelle que soit sa forme. */
+/** Rend le payload d'une proposition en lignes label/valeur + description + listes, quelle que soit sa forme. */
 export function renderPayload(type: ProposalType, payload: unknown): RenderedPayload {
   const record = asRecord(payload);
+  if (type === "race") return raceContent(record);
+  if (type === "class") return classContent(record);
   const rows = type === "spell" ? spellRows(record) : type === "feat" ? featRows(record) : itemRows(record);
-  return { rows, description: asText(record.description) };
+  return { rows, description: asText(record.description), sections: [] };
 }
