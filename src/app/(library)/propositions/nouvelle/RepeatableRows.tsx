@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { submittedIndexes } from "@/lib/proposals/rows";
 import styles from "../propositions.module.css";
 
@@ -17,6 +17,11 @@ import styles from "../propositions.module.css";
  *   « Ajouter »/« Supprimer », inertes sans JS, restent cachés jusqu'à l'hydratation.
  * - Après une erreur de validation, le parent remonte le composant (`key`) pour
  *   reconstruire toutes les lignes saisies depuis `values`.
+ * - Chaque ligne est un volet repliable (`aria-expanded`) pour éviter de longs
+ *   défilements : au-delà de `collapseAbove` lignes, elles démarrent repliées,
+ *   sauf celles qui portent une erreur ; une ligne ajoutée s'ouvre. Le contenu
+ *   replié reste dans le DOM (simplement masqué) : il est soumis avec le
+ *   formulaire. Sans JavaScript, tout reste déplié.
  */
 
 export interface RowField {
@@ -57,6 +62,13 @@ export interface RepeatableRowsProps {
   min?: number;
   max: number;
   hint?: string;
+  /**
+   * Texte affiché à côté du titre d'une ligne (ex. le nom saisi).
+   * `read(sous-champ)` renvoie la valeur courante d'un champ de la ligne.
+   */
+  summary?: (read: (sub: string) => string) => string;
+  /** Au-delà de ce nombre de lignes au montage, elles démarrent repliées (3 par défaut). */
+  collapseAbove?: number;
   children: (row: RowContext) => ReactNode;
 }
 
@@ -92,6 +104,8 @@ export function RepeatableRows({
   min = 0,
   max,
   hint,
+  summary,
+  collapseAbove = 3,
   children,
 }: RepeatableRowsProps) {
   const hydrated = useHydrated();
@@ -103,6 +117,21 @@ export function RepeatableRows({
       initial: index < submitted.length ? index : null,
     })),
   );
+  const [open, setOpen] = useState<Record<number, boolean>>(() => {
+    const count = Math.max(submitted.length, 1);
+    const collapse = count > collapseAbove;
+    const state: Record<number, boolean> = {};
+    for (let index = 0; index < count; index += 1) {
+      const errorPrefix = errorName !== null && index < submitted.length ? `${errorName}.${index}` : null;
+      const hasError =
+        errorPrefix !== null &&
+        Object.keys(errors).some((key) => key === errorPrefix || key.startsWith(`${errorPrefix}.`));
+      state[index] = !collapse || hasError;
+    }
+    return state;
+  });
+  // Résumés à jour de ce qui est en cours de saisie (par clé de ligne) ; à défaut, ceux des valeurs initiales.
+  const [labels, setLabels] = useState<Record<number, string>>({});
   const listRef = useRef<HTMLOListElement>(null);
   const addRef = useRef<HTMLButtonElement>(null);
   const pendingFocus = useRef<Focus | null>(null);
@@ -115,14 +144,22 @@ export function RepeatableRows({
       addRef.current?.focus();
       return;
     }
-    const row = listRef.current?.querySelector(`[data-row-key="${target.key}"]`);
-    row?.querySelector<HTMLElement>("input, textarea, select")?.focus();
+    const row = listRef.current?.querySelector<HTMLElement>(`[data-row-key="${target.key}"]`);
+    if (!row) return;
+    // Ligne repliée : le focus va sur son bouton de volet, ses champs ne sont pas visibles.
+    const body = Array.from(row.children).find((child) => child.hasAttribute("data-row-body"));
+    if (body?.hasAttribute("hidden")) {
+      row.querySelector<HTMLElement>("[data-row-toggle]")?.focus();
+      return;
+    }
+    body?.querySelector<HTMLElement>("input, textarea, select")?.focus();
   }, [rows]);
 
   const add = () => {
     if (rows.length >= max) return;
     const key = Math.max(-1, ...rows.map((row) => row.key)) + 1;
     pendingFocus.current = { kind: "row", key };
+    setOpen({ ...open, [key]: true });
     setRows([...rows, { key, initial: null }]);
   };
 
@@ -132,6 +169,27 @@ export function RepeatableRows({
     const neighbour = next[position] ?? next[position - 1];
     pendingFocus.current = neighbour ? { kind: "row", key: neighbour.key } : { kind: "add" };
     setRows(next);
+  };
+
+  const isOpen = (key: number) => open[key] ?? true;
+  const allOpen = rows.every((row) => isOpen(row.key));
+  const setAllOpen = (value: boolean) => setOpen(Object.fromEntries(rows.map((row) => [row.key, value])));
+
+  // Met à jour le résumé de la ligne dont un champ vient d'être modifié. Une liste imbriquée
+  // remonte aussi ses événements : on remonte jusqu'à la ligne enfant DIRECTE de cette liste.
+  const onInput = (event: FormEvent<HTMLOListElement>) => {
+    if (!summary) return;
+    let element = event.target as HTMLElement | null;
+    while (element && element.parentElement !== event.currentTarget) element = element.parentElement;
+    if (!element) return;
+    const row = element;
+    const key = Number(row.dataset.rowKey);
+    const position = Array.from(event.currentTarget.children).indexOf(row);
+    const read = (sub: string) =>
+      row.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+        `[name="${name}.${position}.${sub}"]`,
+      )?.value ?? "";
+    setLabels((current) => ({ ...current, [key]: summary(read).trim() }));
   };
 
   const listError = errorName !== null ? errors[errorName] : undefined;
@@ -147,7 +205,7 @@ export function RepeatableRows({
         </span>
       ) : null}
 
-      <ol ref={listRef} className={styles.repeatableRows}>
+      <ol ref={listRef} className={styles.repeatableRows} onInput={onInput}>
         {rows.map((row, position) => {
           const rowName = `${name}.${position}`;
           const rawIndex = row.initial !== null ? submitted[row.initial] : undefined;
@@ -164,13 +222,32 @@ export function RepeatableRows({
               error: rowErrorName !== null ? errors[`${rowErrorName}.${sub}`] : undefined,
             }),
           };
+          const rowOpen = isOpen(row.key);
+          const title = `${itemLabel} ${position + 1}${itemContext}`;
+          const bodyId = `${name.replaceAll(".", "-")}-row-${row.key}-body`;
+          const label =
+            labels[row.key] ?? (summary ? summary((sub) => context.field(sub).defaultValue).trim() : "");
           return (
             <li key={row.key} data-row-key={row.key} className={styles.repeatableRow}>
               <div className={styles.repeatableHeader}>
-                <strong>
-                  {itemLabel} {position + 1}
-                  {itemContext}
-                </strong>
+                {hydrated ? (
+                  <button
+                    type="button"
+                    className={styles.rowToggle}
+                    data-row-toggle
+                    aria-expanded={rowOpen}
+                    aria-controls={bodyId}
+                    onClick={() => setOpen({ ...open, [row.key]: !rowOpen })}
+                  >
+                    <span aria-hidden="true" className={styles.rowChevron}>
+                      {rowOpen ? "▾" : "▸"}
+                    </span>
+                    <strong>{title}</strong>
+                    {label ? <span className={styles.rowSummary}>{label}</span> : null}
+                  </button>
+                ) : (
+                  <strong>{title}</strong>
+                )}
                 <button
                   type="button"
                   className={styles.secondaryButton}
@@ -182,7 +259,9 @@ export function RepeatableRows({
                   Supprimer
                 </button>
               </div>
-              {children(context)}
+              <div id={bodyId} data-row-body hidden={hydrated && !rowOpen} className={styles.repeatableBody}>
+                {children(context)}
+              </div>
             </li>
           );
         })}
@@ -199,6 +278,16 @@ export function RepeatableRows({
         >
           {addLabel}
         </button>
+        {hydrated && rows.length > 1 ? (
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            aria-label={`${allOpen ? "Tout replier" : "Tout déplier"} : ${legend}`}
+            onClick={() => setAllOpen(!allOpen)}
+          >
+            {allOpen ? "Tout replier" : "Tout déplier"}
+          </button>
+        ) : null}
         <span className={styles.counter} aria-live="polite">
           {rows.length} / {max}
         </span>

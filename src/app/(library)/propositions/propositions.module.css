@@ -704,3 +704,44 @@
   line-height: 1.5;
   opacity: 0.85;
 }
+
+.repeatableBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rowToggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowToggle:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.rowChevron {
+  flex-shrink: 0;
+  width: 1em;
+  opacity: 0.7;
+}
+
+.rowSummary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  opacity: 0.75;
+}

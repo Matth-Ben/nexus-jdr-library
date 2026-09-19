@@ -224,3 +224,153 @@ describe("RepeatableRows", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Erreur T31");
   });
 });
+
+const four = {
+  "traits.0.name": "Vision",
+  "traits.1.name": "Chance",
+  "traits.2.name": "Ruse",
+  "traits.3.name": "Agilité",
+};
+const summaryName = (read: (sub: string) => string) => read("name");
+
+describe("RepeatableRows : volets repliables", () => {
+  it("jusqu'à 3 lignes, elles démarrent dépliées", () => {
+    render(<Rows values={{ "traits.0.name": "A", "traits.1.name": "B", "traits.2.name": "C" }} summary={summaryName} />);
+    const toggles = screen.getAllByRole("button", { name: /^Trait \d/ });
+    expect(toggles).toHaveLength(3);
+    for (const toggle of toggles) expect(toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("au-delà de 3 lignes, elles démarrent repliées et affichent leur résumé", () => {
+    render(<Rows max={6} values={four} summary={summaryName} />);
+    const toggles = screen.getAllByRole("button", { name: /^Trait \d/ });
+    expect(toggles).toHaveLength(4);
+    for (const toggle of toggles) expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /Trait 2\s*Chance/ })).toBeInTheDocument();
+  });
+
+  it("une ligne repliée reste dans le formulaire : sa saisie est bien soumise", () => {
+    const { container } = render(<Rows max={6} values={four} summary={summaryName} />);
+    const form = container.querySelector("form") as HTMLFormElement;
+    expect(new FormData(form).getAll("traits.1.name")).toEqual(["Chance"]);
+    expect(container.querySelector("#traits-row-1-body")).toHaveAttribute("hidden");
+  });
+
+  it("déplie et replie une ligne au clic, en synchronisant aria-expanded et le contenu", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Rows max={6} values={four} summary={summaryName} />);
+    const toggle = screen.getByRole("button", { name: /Trait 2/ });
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(container.querySelector("#traits-row-1-body")).not.toHaveAttribute("hidden");
+    expect(toggle).toHaveAttribute("aria-controls", "traits-row-1-body");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(container.querySelector("#traits-row-1-body")).toHaveAttribute("hidden");
+  });
+
+  it("une ligne en erreur démarre dépliée, les autres restent repliées", () => {
+    render(
+      <Rows max={6} values={four} errors={{ "traits.2.name": "Le nom est obligatoire." }} summary={summaryName} />,
+    );
+    const expanded = screen.getAllByRole("button", { name: /^Trait \d/ }).map((toggle) => toggle.getAttribute("aria-expanded"));
+    expect(expanded).toEqual(["false", "false", "true", "false"]);
+    expect(screen.getByRole("alert")).toHaveTextContent("Le nom est obligatoire.");
+  });
+
+  it("met à jour le résumé pendant la saisie", async () => {
+    const user = userEvent.setup();
+    render(<Rows max={6} values={four} summary={summaryName} />);
+    await user.click(screen.getByRole("button", { name: /Trait 1/ }));
+    const input = screen.getByLabelText("Nom 1");
+    await user.clear(input);
+    await user.type(input, "Vue perçante");
+    expect(screen.getByRole("button", { name: /Trait 1\s*Vue perçante/ })).toBeInTheDocument();
+  });
+
+  it("une ligne ajoutée s'ouvre et prend le focus, même quand les autres sont repliées", async () => {
+    const user = userEvent.setup();
+    render(<Rows max={6} values={four} summary={summaryName} />);
+    await user.click(screen.getByRole("button", { name: "Ajouter un trait" }));
+    expect(screen.getByRole("button", { name: /Trait 5/ })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByLabelText("Nom 5")).toHaveFocus();
+  });
+
+  it("supprimer une ligne dont la voisine est repliée place le focus sur le bouton de cette voisine", async () => {
+    const user = userEvent.setup();
+    render(<Rows max={6} values={four} summary={summaryName} />);
+    await user.click(screen.getByRole("button", { name: "Supprimer trait 1" }));
+    expect(screen.getAllByRole("button", { name: /^Trait \d/ })).toHaveLength(3);
+    expect(screen.getByRole("button", { name: /Trait 1\s*Chance/ })).toHaveFocus();
+  });
+
+  it("« Tout déplier » / « Tout replier » agissent sur toute la liste", async () => {
+    const user = userEvent.setup();
+    render(<Rows max={6} values={four} summary={summaryName} />);
+    await user.click(screen.getByRole("button", { name: "Tout déplier : Traits" }));
+    for (const toggle of screen.getAllByRole("button", { name: /^Trait \d/ })) {
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+    }
+    await user.click(screen.getByRole("button", { name: "Tout replier : Traits" }));
+    for (const toggle of screen.getAllByRole("button", { name: /^Trait \d/ })) {
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+    }
+  });
+
+  it("pas de bouton « Tout déplier » avec une seule ligne", () => {
+    render(<Rows />);
+    expect(screen.queryByRole("button", { name: /Tout (déplier|replier)/ })).not.toBeInTheDocument();
+  });
+
+  it("sans JavaScript (rendu serveur) : toutes les lignes sont dépliées, sans bouton de volet", () => {
+    const html = renderToString(<Rows max={6} values={four} summary={summaryName} />);
+    expect(html).not.toContain("data-row-toggle");
+    expect(html).not.toMatch(/data-row-body[^>]*hidden/);
+    expect(html).toContain('name="traits.3.name"');
+  });
+
+  it("listes imbriquées : le résumé de la ligne parente ignore les saisies de la liste enfant", async () => {
+    const user = userEvent.setup();
+    render(
+      <form>
+        <RepeatableRows
+          name="subraces"
+          valueName={null}
+          errorName={null}
+          values={{}}
+          errors={{}}
+          legend="Sous-races"
+          itemLabel="Sous-race"
+          addLabel="Ajouter une sous-race"
+          max={3}
+          summary={summaryName}
+        >
+          {(outer) => (
+            <>
+              <input aria-label="Nom de la sous-race" name={outer.field("name").name} />
+              <RepeatableRows
+                name={`${outer.name}.traits`}
+                valueName={null}
+                errorName={null}
+                values={{}}
+                errors={{}}
+                legend="Traits"
+                itemLabel="Trait"
+                addLabel="Ajouter un trait"
+                max={3}
+                summary={summaryName}
+              >
+                {(inner) => <input aria-label="Nom du trait" name={inner.field("name").name} />}
+              </RepeatableRows>
+            </>
+          )}
+        </RepeatableRows>
+      </form>,
+    );
+    await user.type(screen.getByLabelText("Nom de la sous-race"), "Elfe des bois");
+    await user.type(screen.getByLabelText("Nom du trait"), "Pas léger");
+    expect(screen.getByRole("button", { name: /Sous-race 1\s*Elfe des bois/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Trait 1\s*Pas léger/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Sous-race 1.*Pas léger/ })).not.toBeInTheDocument();
+  });
+});

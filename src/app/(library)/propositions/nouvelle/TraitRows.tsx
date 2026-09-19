@@ -37,6 +37,7 @@ export function TraitRows({ name, valueName, errorName, values, errors, subraceN
       itemLabel="Trait"
       itemContext={of}
       addLabel={`Ajouter un trait${of}`}
+      summary={(read) => read("name")}
       min={subrace || optional ? 0 : 1}
       max={subrace ? SUBRACE_TRAITS_MAX : TRAITS_MAX}
       hint={

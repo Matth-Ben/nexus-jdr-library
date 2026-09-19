@@ -86,6 +86,7 @@ export function RaceFields({ values, errors, modification = false }: RaceFieldsP
         legend="Sous-races (facultatif)"
         itemLabel="Sous-race"
         addLabel="Ajouter une sous-race"
+        summary={(read) => read("name")}
         max={SUBRACES_MAX}
       >
         {(row) => {

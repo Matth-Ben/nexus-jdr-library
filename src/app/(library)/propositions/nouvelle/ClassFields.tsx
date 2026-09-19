@@ -158,6 +158,7 @@ export function ClassFields({ values, errors, modification = false }: ClassField
         legend="Aptitudes de classe (facultatif)"
         itemLabel="Aptitude"
         addLabel="Ajouter une aptitude"
+        summary={(read) => [read("level") ? `niv. ${read("level")}` : "", read("name")].filter(Boolean).join(" · ")}
         max={FEATURES_MAX}
       >
         {(row) => {
@@ -216,6 +217,7 @@ export function ClassFields({ values, errors, modification = false }: ClassField
         legend="Sous-classes (facultatif)"
         itemLabel="Sous-classe"
         addLabel="Ajouter une sous-classe"
+        summary={(read) => [read("available_from_level") ? "niv. " + read("available_from_level") : "", read("name")].filter(Boolean).join(" · ")}
         max={modification ? SUBCLASSES_MAX_MODIFICATION : SUBCLASSES_MAX}
       >
         {(row) => {
