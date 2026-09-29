@@ -1,13 +1,17 @@
 import type { RaceDetail } from "@/lib/races/types";
+import type { Ref } from "@/lib/reference/types";
 import { sizeLabel, sourceLabel, speedLabel } from "./RacesListView";
 import { ProposeModificationLink } from "@/components/ProposeModificationLink";
+import { LinkListSection, RefLink } from "@/components/reference/DetailBlocks";
 import styles from "./races.module.css";
 
 export interface RaceDetailViewProps {
   race: RaceDetail;
+  /** Lignées rattachées directement à la race (ascendances draconiques, lignées 2024...). */
+  lineages?: Ref[];
 }
 
-export function RaceDetailView({ race }: RaceDetailViewProps) {
+export function RaceDetailView({ race, lineages = [] }: RaceDetailViewProps) {
   return (
     <div className={styles.detail}>
 
@@ -69,7 +73,9 @@ export function RaceDetailView({ race }: RaceDetailViewProps) {
           <div className={styles.subraceList}>
             {race.subraces.map((subrace) => (
               <div key={subrace.id} className={styles.subraceCard}>
-                <h3>{subrace.name}</h3>
+                <h3>
+                  <RefLink kind="subrace" item={subrace} />
+                </h3>
                 <p className={styles.meta}>
                   <span>{subrace.abilityBonuses}</span>
                 </p>
@@ -90,6 +96,10 @@ export function RaceDetailView({ race }: RaceDetailViewProps) {
           <p className={styles.empty}>Cette race n&apos;a pas de sous-race.</p>
         )}
       </div>
+
+      {lineages.length > 0 ? (
+        <LinkListSection title="Lignées" kind="lineage" items={lineages} empty="" />
+      ) : null}
 
       <ProposeModificationLink type="race" id={race.id} />
     </div>
