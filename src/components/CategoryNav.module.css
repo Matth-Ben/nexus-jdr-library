@@ -47,6 +47,33 @@
   opacity: 1;
 }
 
+.subnav {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  overflow-x: auto;
+  border-top: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.sublink {
+  display: block;
+  padding: 8px 12px;
+  font-size: 13px;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.sublink:hover {
+  opacity: 1;
+}
+
+.sublinkActive {
+  font-weight: 600;
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .account {
   display: flex;
   align-items: center;

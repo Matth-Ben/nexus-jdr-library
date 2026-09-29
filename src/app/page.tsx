@@ -19,8 +19,26 @@ export default function Home() {
           <Link className={styles.secondary} href="/classes">
             Classes
           </Link>
+          <Link className={styles.secondary} href="/sous-classes">
+            Sous-classes
+          </Link>
+          <Link className={styles.secondary} href="/aptitudes">
+            Aptitudes
+          </Link>
+          <Link className={styles.secondary} href="/options-de-classe">
+            Options de classe
+          </Link>
+          <Link className={styles.secondary} href="/invocations">
+            Invocations
+          </Link>
           <Link className={styles.secondary} href="/races">
             Races
+          </Link>
+          <Link className={styles.secondary} href="/sous-races">
+            Sous-races
+          </Link>
+          <Link className={styles.secondary} href="/lignees">
+            Lignées
           </Link>
           <Link className={styles.secondary} href="/dons">
             Dons

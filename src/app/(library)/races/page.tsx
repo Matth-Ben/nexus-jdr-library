@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { DetailPanel } from "@/components/DetailPanel";
 import { closeHref, parseOpenId } from "@/lib/panel";
 import { getRaceById, listRaces } from "@/lib/races/queries";
+import { listLineagesForRace } from "@/lib/reference/queries";
+import type { Ref } from "@/lib/reference/types";
 import { RaceDetailView } from "./RaceDetailView";
 import { filterRaces, parseRaceFilters, type RawSearchParams } from "@/lib/races/filters";
 import type { RaceListItem } from "@/lib/races/types";
@@ -33,7 +35,15 @@ async function PanelContent({ id }: { id: number }) {
   if (!race) {
     return <p>Fiche introuvable.</p>;
   }
-  return <RaceDetailView race={race} />;
+
+  // Section secondaire : un échec ne doit pas masquer la fiche elle-même.
+  let lineages: Ref[] = [];
+  try {
+    lineages = await listLineagesForRace(id);
+  } catch (error) {
+    console.error("[races] échec du chargement des lignées", error);
+  }
+  return <RaceDetailView race={race} lineages={lineages} />;
 }
 
 export default async function RacesPage({ searchParams }: RacesPageProps) {

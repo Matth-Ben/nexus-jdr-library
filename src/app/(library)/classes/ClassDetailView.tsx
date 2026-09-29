@@ -1,4 +1,7 @@
+import Link from "next/link";
+import { RefLink } from "@/components/reference/DetailBlocks";
 import { formatStringList } from "@/lib/classes/translations";
+import { REFERENCE_PATHS } from "@/lib/reference/routes";
 import type { ClassDetail } from "@/lib/classes/types";
 import { hitDieLabel } from "./ClassesListView";
 import { ProposeModificationLink } from "@/components/ProposeModificationLink";
@@ -55,16 +58,22 @@ export function ClassDetailView({ klass }: ClassDetailViewProps) {
           <ul className={styles.subclassList}>
             {klass.subclasses.map((subclass) => (
               <li key={subclass.id} className={styles.subclassItem}>
-                <span>{subclass.name}</span>
+                <RefLink kind="subclass" item={subclass} />
                 <span>Disponible dès le niveau {subclass.availableFromLevel}</span>
               </li>
             ))}
           </ul>
         )}
+        <Link href={`${REFERENCE_PATHS.subclass}?classe=${klass.id}`} className={styles.moreLink}>
+          Voir les sous-classes de {klass.name}
+        </Link>
       </section>
 
       <section className={styles.section}>
         <h2>Aptitudes de classe</h2>
+        <Link href={`${REFERENCE_PATHS.feature}?classe=${klass.id}`} className={styles.moreLink}>
+          Toutes les aptitudes de {klass.name}, sous-classes comprises
+        </Link>
         {klass.features.length === 0 ? (
           <p className={styles.empty}>Aucune aptitude référencée pour le moment.</p>
         ) : (
@@ -72,7 +81,7 @@ export function ClassDetailView({ klass }: ClassDetailViewProps) {
             {klass.features.map((feature) => (
               <li key={feature.id} className={styles.featureItem}>
                 <div className={styles.featureHeader}>
-                  <span>{feature.name}</span>
+                  <RefLink kind="feature" item={feature} />
                   <span className={styles.badge}>Niveau {feature.level}</span>
                   {feature.choiceType ? (
                     <span className={styles.badge}>{feature.choiceType}</span>

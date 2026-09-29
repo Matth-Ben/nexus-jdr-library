@@ -1,3 +1,5 @@
+/* Styles communs des pages du référentiel — mêmes valeurs que classes.module.css / races.module.css. */
+
 .page {
   display: flex;
   flex-direction: column;
@@ -13,15 +15,10 @@
   font-weight: 600;
 }
 
-.backLink {
-  align-self: flex-start;
-  font-size: 14px;
-  color: var(--foreground);
-  opacity: 0.75;
-}
-
-.backLink:hover {
-  opacity: 1;
+.intro {
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.8;
 }
 
 .filters {
@@ -42,7 +39,8 @@
   min-width: 160px;
 }
 
-.filters input {
+.filters input,
+.filters select {
   padding: 8px;
   border: 1px solid rgba(128, 128, 128, 0.4);
   border-radius: 6px;
@@ -79,6 +77,18 @@
   color: #c0392b;
 }
 
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -102,6 +112,10 @@
   background: rgba(128, 128, 128, 0.08);
 }
 
+.rowLinkActive {
+  background: rgba(128, 128, 128, 0.16);
+}
+
 .name {
   font-size: 16px;
   font-weight: 600;
@@ -123,7 +137,19 @@
   color: #8e44ad;
   font-size: 12px;
   font-weight: 600;
-  opacity: 1;
+}
+
+/* Fiche de détail (panneau) */
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail h1 {
+  font-size: 24px;
+  font-weight: 600;
 }
 
 .detailGrid {
@@ -164,45 +190,16 @@
   font-weight: 600;
 }
 
-.featureList {
+.linkList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   list-style: none;
 }
 
-.featureItem {
-  padding: 12px 16px;
-  border: 1px solid rgba(128, 128, 128, 0.25);
-  border-radius: 8px;
-}
-
-.featureHeader {
+.linkItem {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.featureDescription {
-  margin-top: 4px;
-  font-size: 14px;
-  line-height: 1.5;
-  opacity: 0.85;
-  white-space: pre-line;
-}
-
-.subclassList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  list-style: none;
-}
-
-.subclassItem {
-  display: flex;
   justify-content: space-between;
   gap: 8px;
   padding: 10px 16px;
@@ -211,35 +208,46 @@
   font-size: 14px;
 }
 
+.linkItem > span {
+  opacity: 0.75;
+}
+
+.refLink {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(128, 128, 128, 0.6);
+}
+
+.refLink:hover {
+  text-decoration-color: currentColor;
+}
+
+.traitList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trait {
+  padding: 12px 16px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+}
+
+.trait dt {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trait dd {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
 @media (max-width: 600px) {
   .detailGrid {
     grid-template-columns: 1fr;
   }
-}
-
-.detail {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.detail h1 {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.rowLinkActive {
-  background: rgba(128, 128, 128, 0.16);
-}
-
-.moreLink {
-  align-self: flex-start;
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  opacity: 0.8;
-}
-
-.moreLink:hover {
-  opacity: 1;
 }
