@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { isOptionChoiceType } from "@/lib/reference/format";
+import { isClassOptionType } from "@/lib/class-options/format";
 import { REFERENCE_PATHS } from "@/lib/reference/routes";
 import type { FeatureDetail } from "@/lib/reference/types";
 import { LinkListSection, RefLink } from "./DetailBlocks";
 import styles from "./reference.module.css";
 
-/** Fiche d'une aptitude de classe — partagée par `/aptitudes` et `/options-de-classe`. */
+/** Fiche d'une aptitude de classe (`/aptitudes`). */
 export function FeatureDetailView({ feature }: { feature: FeatureDetail }) {
   return (
     <div className={styles.detail}>
@@ -31,11 +31,15 @@ export function FeatureDetailView({ feature }: { feature: FeatureDetail }) {
           <div>
             <dt>Choix</dt>
             <dd>
-              {isOptionChoiceType(feature.choiceCode) ? (
+              {isClassOptionType(feature.choiceCode) ? (
                 <Link
                   href={`${REFERENCE_PATHS.option}?type=${encodeURIComponent(feature.choiceCode)}`}
                   className={styles.refLink}
                 >
+                  {feature.choiceLabel}
+                </Link>
+              ) : feature.choiceCode === "invocation" ? (
+                <Link href={REFERENCE_PATHS.invocation} className={styles.refLink}>
                   {feature.choiceLabel}
                 </Link>
               ) : (
@@ -63,6 +67,15 @@ export function FeatureDetailView({ feature }: { feature: FeatureDetail }) {
             Voir les sous-classes de {feature.class.name}
           </Link>
         </p>
+      ) : null}
+
+      {feature.classOptions.length > 0 ? (
+        <LinkListSection
+          title="Options disponibles"
+          kind="option"
+          items={feature.classOptions}
+          empty=""
+        />
       ) : null}
 
       {feature.invocations.length > 0 ? (

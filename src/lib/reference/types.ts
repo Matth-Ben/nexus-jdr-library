@@ -137,6 +137,8 @@ export interface FeatureDetail extends FeatureListItem {
   usesPerRestLabel: string | null;
   /** Invocations liées (aptitude « Invocations occultes » ou « Faveur de pacte »). */
   invocations: Ref[];
+  /** Options de classe du même type (manœuvres, métamagie, styles de combat...). */
+  classOptions: Ref[];
 }
 
 export interface InvocationListItem extends Ref {

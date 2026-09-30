@@ -37,6 +37,7 @@ const CATEGORIES: Category[] = [
       { href: "/lignees", label: "Lignées" },
     ],
   },
+  { href: "/historiques", label: "Historiques" },
   { href: "/dons", label: "Dons" },
   { href: "/objets", label: "Objets" },
   { href: "/creatures", label: "Créatures" },
