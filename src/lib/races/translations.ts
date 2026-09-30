@@ -17,7 +17,16 @@ const MISSING_TEXT = "(non renseigné)";
  * Abréviations françaises conventionnelles des caractéristiques D&D 5e,
  * dans l'ordre où elles sont habituellement listées dans les règles.
  */
-const ABILITY_ORDER = ["str", "dex", "con", "int", "wis", "cha", "choice_others"] as const;
+const ABILITY_ORDER = [
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+  "choice_others",
+  "choice_flexible",
+] as const;
 
 const ABILITY_LABELS: Record<string, string> = {
   str: "FOR",
@@ -32,13 +41,17 @@ function signed(value: number): string {
   return `${value >= 0 ? "+" : ""}${value}`;
 }
 
-function formatAbilityEntry(key: string, value: number | ChoiceOthers): string {
+function formatAbilityEntry(key: string, value: number | boolean | ChoiceOthers): string {
+  if (key === "choice_flexible") {
+    return "+2 à une caractéristique et +1 à une autre, ou +1 à trois, au choix";
+  }
   if (key === "choice_others") {
     if (typeof value === "number") {
       return `${signed(value)} au choix`;
     }
-    const amount = typeof value?.amount === "number" ? value.amount : 1;
-    const count = typeof value?.count === "number" ? value.count : 1;
+    const choice = typeof value === "object" ? value : null;
+    const amount = typeof choice?.amount === "number" ? choice.amount : 1;
+    const count = typeof choice?.count === "number" ? choice.count : 1;
     return `${signed(amount)} à ${count} caractéristique${count > 1 ? "s" : ""} au choix`;
   }
   const label = ABILITY_LABELS[key] ?? key.toUpperCase();

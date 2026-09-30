@@ -38,6 +38,12 @@ describe("formatAbilityBonuses", () => {
     );
   });
 
+  it("gère choice_flexible (+2/+1 ou +1/+1/+1 au choix)", () => {
+    expect(formatAbilityBonuses({ choice_flexible: true })).toBe(
+      "+2 à une caractéristique et +1 à une autre, ou +1 à trois, au choix",
+    );
+  });
+
   it("gère choice_others sous forme numérique (repli défensif)", () => {
     expect(formatAbilityBonuses({ str: 2, choice_others: 1 })).toBe("FOR +2, +1 au choix");
   });
