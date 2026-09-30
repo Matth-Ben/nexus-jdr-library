@@ -36,7 +36,7 @@ function InvocationDetailView({ invocation }: { invocation: InvocationDetail }) 
               {invocation.grantedBy.map(({ feature, class: klass }, index) => (
                 <span key={feature.id}>
                   {index > 0 ? ", " : null}
-                  <RefLink kind="option" item={feature} />
+                  <RefLink kind="feature" item={feature} />
                   {klass ? (
                     <>
                       {" ("}
@@ -55,7 +55,7 @@ function InvocationDetailView({ invocation }: { invocation: InvocationDetail }) 
             <dd>
               {invocation.pactFeature ? (
                 <RefLink
-                  kind="option"
+                  kind="feature"
                   item={{ id: invocation.pactFeature.id, name: invocation.pactLabel }}
                 />
               ) : (

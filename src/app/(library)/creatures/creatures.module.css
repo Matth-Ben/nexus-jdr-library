@@ -1,0 +1,51 @@
+/* Bloc de statistiques d'une créature — complète reference.module.css. */
+
+.abilities {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ability {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.abilityLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.abilityScore {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.abilityMeta {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.subtitle {
+  font-size: 14px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.source {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+@media (max-width: 600px) {
+  .abilities {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

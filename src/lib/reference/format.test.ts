@@ -3,7 +3,6 @@ import {
   MISSING_NAME,
   grantKindLabel,
   invocationPrerequisiteText,
-  isOptionChoiceType,
   lineageGroupLabel,
   pactLabel,
   sortByName,
@@ -37,19 +36,6 @@ describe("sortByName", () => {
       "Évocation",
     ]);
     expect(input[0].name).toBe("Évocation");
-  });
-});
-
-describe("isOptionChoiceType", () => {
-  it("retient les aptitudes à options (pacte, métamagie...)", () => {
-    expect(isOptionChoiceType("pacte")).toBe(true);
-    expect(isOptionChoiceType("metamagie")).toBe(true);
-  });
-
-  it("exclut les choix qui ne sont pas des listes d'options", () => {
-    expect(isOptionChoiceType("amelioration_caracteristiques")).toBe(false);
-    expect(isOptionChoiceType("sous_classe")).toBe(false);
-    expect(isOptionChoiceType(null)).toBe(false);
   });
 });
 

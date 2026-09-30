@@ -4,30 +4,6 @@ import type { Ref } from "./types";
 export const MISSING_NAME = "(nom manquant)";
 export const MISSING_TEXT = "(non renseigné)";
 
-/**
- * Types de choix (`class_features.choice_type`) présentés sur la page
- * « Options de classe » : les aptitudes où le joueur choisit parmi une liste
- * d'options (faveur de pacte, métamagie, style de combat...). Les
- * améliorations de caractéristiques, le choix de sous-classe et les sorts
- * de domaine restent sur « Aptitudes » : ce ne sont pas des listes d'options.
- */
-export const OPTION_CHOICE_TYPES = [
-  "pacte",
-  "invocation",
-  "metamagie",
-  "manoeuvre",
-  "style_combat",
-  "discipline_elementaire",
-  "ennemi_jure",
-  "ancetre_draconique",
-  "expertise",
-  "sort_mineur_bonus",
-] as const;
-
-export function isOptionChoiceType(code: string | null): boolean {
-  return code !== null && (OPTION_CHOICE_TYPES as readonly string[]).includes(code);
-}
-
 /** Construit une référence `{id, name}` à partir d'une table de traductions. */
 export function toRef(id: number, names: Map<string, string>): Ref {
   return { id, name: names.get(String(id)) ?? MISSING_NAME };

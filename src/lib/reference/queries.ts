@@ -1,4 +1,6 @@
 import { cache } from "react";
+import { isClassOptionType } from "@/lib/class-options/format";
+import { listClassOptionsByType } from "@/lib/class-options/queries";
 import { formatChoiceType, formatUsesPerRest } from "@/lib/classes/translations";
 import { formatAbilityBonuses } from "@/lib/races/translations";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -273,13 +275,16 @@ export const getFeatureById = cache(async function getFeatureById(
   const ownerClassId = row.class_id ?? subclassRows[0]?.class_id ?? null;
   const linksInvocations = row.choice_type === "invocation" || row.choice_type === "pacte";
 
-  const [featureNames, featureDescriptions, classNames, subclassNames, invocations] =
+  const [featureNames, featureDescriptions, classNames, subclassNames, invocations, classOptions] =
     await Promise.all([
       names("class_feature", [row.id]),
       descriptions("class_feature", [row.id]),
       names("class", ownerClassId ? [ownerClassId] : []),
       names("subclass", row.subclass_id ? [row.subclass_id] : []),
       linksInvocations ? listInvocations() : Promise.resolve([]),
+      row.choice_type && isClassOptionType(row.choice_type)
+        ? listClassOptionsByType(row.choice_type)
+        : Promise.resolve([]),
     ]);
 
   return {
@@ -290,6 +295,7 @@ export const getFeatureById = cache(async function getFeatureById(
     invocations: invocations
       .filter((invocation) => row.choice_type !== "pacte" || invocation.pactCode !== null)
       .map((invocation) => ({ id: invocation.id, name: invocation.name })),
+    classOptions: classOptions.map((option) => ({ id: option.id, name: option.name })),
   };
 });
 
