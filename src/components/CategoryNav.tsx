@@ -39,6 +39,7 @@ const CATEGORIES: Category[] = [
   },
   { href: "/dons", label: "Dons" },
   { href: "/objets", label: "Objets" },
+  { href: "/creatures", label: "Créatures" },
   { href: "/propositions", label: "Propositions" },
 ];
 
