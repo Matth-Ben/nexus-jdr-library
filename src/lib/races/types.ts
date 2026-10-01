@@ -25,9 +25,10 @@ export interface ChoiceOthers {
  * Bonus fixes par caractéristique (`{"dex": 2}`, codes anglais str/dex/con/
  * int/wis/cha). `choice_others` est un objet `{count, amount}` — ex. demi-elfe
  * `{count: 2, amount: 1}` = +1 à deux autres caractéristiques au choix
- * (forme réelle vérifiée en base le 2026-09-18).
+ * (forme réelle vérifiée en base le 2026-09-18). `choice_flexible: true` =
+ * +2/+1 ou +1/+1/+1 au choix (races de Monsters of the Multiverse).
  */
-export type AbilityBonuses = Record<string, number | ChoiceOthers>;
+export type AbilityBonuses = Record<string, number | boolean | ChoiceOthers>;
 
 /** Élément de `races.traits`/`subraces.traits` (jsonb, liste d'objets). */
 export interface Trait {
